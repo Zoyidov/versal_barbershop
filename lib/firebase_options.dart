@@ -47,29 +47,32 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAmASNjKxUDbFnzX3OquNfVpxfBvZTFbTY',
-    appId: '1:1058424752673:web:0171d5e3623c00aef3f160',
-    messagingSenderId: '1058424752673',
-    projectId: 'versal-9f41b',
-    authDomain: 'versal-9f41b.firebaseapp.com',
-    storageBucket: 'versal-9f41b.firebasestorage.app',
-    measurementId: 'G-FX918VG8VT',
+    apiKey: 'AIzaSyCo331U_XLXPXr5bqc1ye21apuUKsb07hM',
+    appId: '1:564577343588:web:d26d94340584bb9ea6a771',
+    messagingSenderId: '564577343588',
+    projectId: 'versalbarbershop',
+    authDomain: 'versalbarbershop.firebaseapp.com',
+    databaseURL: 'https://versalbarbershop-default-rtdb.firebaseio.com',
+    storageBucket: 'versalbarbershop.firebasestorage.app',
+    measurementId: 'G-3FD4FR1KJ2',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyD_InzIGQvQ2htgt0mizJdt4p2A3Ane4KI',
-    appId: '1:1058424752673:android:2582de8cc4cb1607f3f160',
-    messagingSenderId: '1058424752673',
-    projectId: 'versal-9f41b',
-    storageBucket: 'versal-9f41b.firebasestorage.app',
+    apiKey: 'AIzaSyD-dTpUlYjmRLnrIYdGMnWRdJ40pUO2Rdw',
+    appId: '1:564577343588:android:2c222ab9184e5c67a6a771',
+    messagingSenderId: '564577343588',
+    projectId: 'versalbarbershop',
+    databaseURL: 'https://versalbarbershop-default-rtdb.firebaseio.com',
+    storageBucket: 'versalbarbershop.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCVPvOZbWf23fAw10lQUSuGAiPFUs9KTj8',
-    appId: '1:1058424752673:ios:0d0d47bd821a4f75f3f160',
-    messagingSenderId: '1058424752673',
-    projectId: 'versal-9f41b',
-    storageBucket: 'versal-9f41b.firebasestorage.app',
+    apiKey: 'AIzaSyCKOiAhIDaMvQybFGlLBV1H_e1Vmw9ikR0',
+    appId: '1:564577343588:ios:2d878b8ddd4bb019a6a771',
+    messagingSenderId: '564577343588',
+    projectId: 'versalbarbershop',
+    databaseURL: 'https://versalbarbershop-default-rtdb.firebaseio.com',
+    storageBucket: 'versalbarbershop.firebasestorage.app',
     iosBundleId: 'com.barber.versal',
   );
 }
