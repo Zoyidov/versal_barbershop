@@ -65,11 +65,11 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCVPvOZbWf23fAw10lQUSuGAiPFUs9KTj8',
-    appId: '1:1058424752673:ios:0d0d47bd821a4f75f3f160',
-    messagingSenderId: '1058424752673',
-    projectId: 'versal-9f41b',
-    storageBucket: 'versal-9f41b.firebasestorage.app',
+    apiKey: 'AIzaSyCKOiAhIDaMvQybFGlLBV1H_e1Vmw9ikR0',
+    appId: '1:564577343588:ios:2d878b8ddd4bb019a6a771',
+    messagingSenderId: '564577343588',
+    projectId: 'versalbarbershop',
+    storageBucket: 'versalbarbershop.firebasestorage.app',
     iosBundleId: 'com.barber.versal',
   );
 }
