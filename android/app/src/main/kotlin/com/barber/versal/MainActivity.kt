@@ -1,4 +1,4 @@
-package com.example.versal
+package com.barber.versal
 
 import io.flutter.embedding.android.FlutterActivity
 

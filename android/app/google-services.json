@@ -1,14 +1,32 @@
 {
   "project_info": {
-    "project_number": "564577343588",
-    "firebase_url": "https://versalbarbershop-default-rtdb.firebaseio.com",
-    "project_id": "versalbarbershop",
-    "storage_bucket": "versalbarbershop.firebasestorage.app"
+    "project_number": "1058424752673",
+    "project_id": "versal-9f41b",
+    "storage_bucket": "versal-9f41b.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:564577343588:android:5d7b9b3257d59a76a6a771",
+        "mobilesdk_app_id": "1:1058424752673:android:2582de8cc4cb1607f3f160",
+        "android_client_info": {
+          "package_name": "com.barber.versal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_InzIGQvQ2htgt0mizJdt4p2A3Ane4KI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1058424752673:android:4cbf40da9ace775df3f160",
         "android_client_info": {
           "package_name": "com.example.versal"
         }
@@ -16,7 +34,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyD-dTpUlYjmRLnrIYdGMnWRdJ40pUO2Rdw"
+          "current_key": "AIzaSyD_InzIGQvQ2htgt0mizJdt4p2A3Ane4KI"
         }
       ],
       "services": {

@@ -47,32 +47,29 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCo331U_XLXPXr5bqc1ye21apuUKsb07hM',
-    appId: '1:564577343588:web:d26d94340584bb9ea6a771',
-    messagingSenderId: '564577343588',
-    projectId: 'versalbarbershop',
-    authDomain: 'versalbarbershop.firebaseapp.com',
-    databaseURL: 'https://versalbarbershop-default-rtdb.firebaseio.com',
-    storageBucket: 'versalbarbershop.firebasestorage.app',
-    measurementId: 'G-3FD4FR1KJ2',
+    apiKey: 'AIzaSyAmASNjKxUDbFnzX3OquNfVpxfBvZTFbTY',
+    appId: '1:1058424752673:web:0171d5e3623c00aef3f160',
+    messagingSenderId: '1058424752673',
+    projectId: 'versal-9f41b',
+    authDomain: 'versal-9f41b.firebaseapp.com',
+    storageBucket: 'versal-9f41b.firebasestorage.app',
+    measurementId: 'G-FX918VG8VT',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyD-dTpUlYjmRLnrIYdGMnWRdJ40pUO2Rdw',
-    appId: '1:564577343588:android:5d7b9b3257d59a76a6a771',
-    messagingSenderId: '564577343588',
-    projectId: 'versalbarbershop',
-    databaseURL: 'https://versalbarbershop-default-rtdb.firebaseio.com',
-    storageBucket: 'versalbarbershop.firebasestorage.app',
+    apiKey: 'AIzaSyD_InzIGQvQ2htgt0mizJdt4p2A3Ane4KI',
+    appId: '1:1058424752673:android:2582de8cc4cb1607f3f160',
+    messagingSenderId: '1058424752673',
+    projectId: 'versal-9f41b',
+    storageBucket: 'versal-9f41b.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCKOiAhIDaMvQybFGlLBV1H_e1Vmw9ikR0',
-    appId: '1:564577343588:ios:2e7001ef3cd77154a6a771',
-    messagingSenderId: '564577343588',
-    projectId: 'versalbarbershop',
-    databaseURL: 'https://versalbarbershop-default-rtdb.firebaseio.com',
-    storageBucket: 'versalbarbershop.firebasestorage.app',
-    iosBundleId: 'com.example.versal',
+    apiKey: 'AIzaSyCVPvOZbWf23fAw10lQUSuGAiPFUs9KTj8',
+    appId: '1:1058424752673:ios:0d0d47bd821a4f75f3f160',
+    messagingSenderId: '1058424752673',
+    projectId: 'versal-9f41b',
+    storageBucket: 'versal-9f41b.firebasestorage.app',
+    iosBundleId: 'com.barber.versal',
   );
 }
