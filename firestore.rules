@@ -1,0 +1,77 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // `users` (barber accounts, including password hashes). Credential
+    // *verification* always goes through the `loginWithPhonePassword`
+    // callable (Admin SDK, bypasses these rules) - it never trusts a
+    // client-side read. A signed-in barber may read their OWN profile
+    // document only, which is what the app uses post-login to restore
+    // name/role on relaunch; seeing your own password hash isn't a
+    // security issue since you already know your own password, and no
+    // one can read another barber's document.
+    match /users/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // `clients/{phoneNumber}` lifetime aggregates: read-only from the app
+    // (smart-alert lookup + statistics stream). Only the Cloud Functions
+    // backend (Admin SDK) ever writes these, so counters can't be
+    // tampered with from the client.
+    match /clients/{phoneNumber} {
+      allow read: if isSignedIn();
+      allow write: if false;
+    }
+
+    // `appointments/{appointmentId}`.
+    match /appointments/{appointmentId} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && request.resource.data.clientPhone is string
+        && request.resource.data.clientPhone.size() > 0
+        && request.resource.data.appointmentTime is timestamp
+        && request.resource.data.barberId == request.auth.uid
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.status == 'scheduled'
+        && request.resource.data.sendSms is bool
+        && request.resource.data.smsSent == false;
+
+      // Edits may only touch client-facing fields. Anything the backend
+      // owns (smsSent/smsStatus/reminderTaskName/createdAt/createdBy/
+      // barberId) must stay exactly as it was - this stops a compromised
+      // or buggy client from ever marking its own reminder "sent" or
+      // reassigning ownership of a booking.
+      allow update: if isSignedIn()
+        && request.resource.data.barberId == resource.data.barberId
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.smsSent == resource.data.smsSent
+        && request.resource.data.smsSentAt == resource.data.smsSentAt
+        && request.resource.data.smsStatus == resource.data.smsStatus
+        && request.resource.data.reminderTaskName == resource.data.reminderTaskName
+        && (request.resource.data.status == resource.data.status
+            || (resource.data.status == 'scheduled' && request.resource.data.status == 'cancelled'));
+
+      // Appointments are never deleted - cancellation is a status update
+      // so statistics/history stay intact.
+      allow delete: if false;
+    }
+
+    // `settings/global`: every signed-in barber can read and update the
+    // shared configuration (single-shop app, no per-barber admin tier).
+    match /settings/{settingsId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn()
+        && request.resource.data.reminderWindowMinutes is int
+        && request.resource.data.reminderWindowMinutes > 0
+        && request.resource.data.reminderWindowMinutes <= 1440;
+    }
+  }
+}

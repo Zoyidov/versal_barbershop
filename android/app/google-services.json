@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "564577343588",
+    "firebase_url": "https://versalbarbershop-default-rtdb.firebaseio.com",
+    "project_id": "versalbarbershop",
+    "storage_bucket": "versalbarbershop.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:564577343588:android:5d7b9b3257d59a76a6a771",
+        "android_client_info": {
+          "package_name": "com.example.versal"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-dTpUlYjmRLnrIYdGMnWRdJ40pUO2Rdw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

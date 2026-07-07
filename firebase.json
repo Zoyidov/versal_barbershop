@@ -1,0 +1,43 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "versalbarbershop",
+          "appId": "1:564577343588:android:5d7b9b3257d59a76a6a771",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "versalbarbershop",
+          "configurations": {
+            "android": "1:564577343588:android:5d7b9b3257d59a76a6a771",
+            "ios": "1:564577343588:ios:2e7001ef3cd77154a6a771",
+            "web": "1:564577343588:web:d26d94340584bb9ea6a771"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ]
+}
