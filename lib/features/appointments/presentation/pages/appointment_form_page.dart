@@ -1,3 +1,12 @@
+import 'package:flutter/cupertino.dart'
+    show
+        showCupertinoModalPopup,
+        CupertinoDatePicker,
+        CupertinoDatePickerMode,
+        CupertinoButton,
+        CupertinoTheme,
+        CupertinoThemeData,
+        CupertinoTextThemeData;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -59,22 +68,105 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
   Future<void> _pickTime(BuildContext context) async {
     final cubit = context.read<AppointmentFormCubit>();
     final initial = cubit.state.time ?? TimeOfDay.now();
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: initial,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: AppColors.gold,
-                  surface: AppColors.surface,
+
+    if (Theme.of(context).platform == TargetPlatform.iOS) {
+      TimeOfDay selectedTime = initial;
+      await showCupertinoModalPopup<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return CupertinoTheme(
+            data: const CupertinoThemeData(
+              brightness: Brightness.dark,
+              primaryColor: AppColors.gold,
+              textTheme: CupertinoTextThemeData(
+                dateTimePickerTextStyle: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 20,
                 ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null) cubit.onTimeSelected(picked);
+              ),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                height: 320,
+                decoration: const BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  border: Border(
+                    top: BorderSide(color: AppColors.surfaceGlassBorder, width: 0.5),
+                  ),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: AppColors.surfaceGlassBorder, width: 0.5),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Vaqtni tanlang',
+                              style: AppTextStyles.title.copyWith(fontSize: 16),
+                            ),
+                            CupertinoButton(
+                              padding: EdgeInsets.zero,
+                              onPressed: () {
+                                cubit.onTimeSelected(selectedTime);
+                                Navigator.pop(context);
+                              },
+                              child: const Text(
+                                'Tayyor',
+                                style: TextStyle(
+                                  color: AppColors.gold,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: CupertinoDatePicker(
+                          mode: CupertinoDatePickerMode.time,
+                          initialDateTime: DateTime(2020, 1, 1, initial.hour, initial.minute),
+                          use24hFormat: true,
+                          onDateTimeChanged: (DateTime newDateTime) {
+                            selectedTime = TimeOfDay(hour: newDateTime.hour, minute: newDateTime.minute);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    } else {
+      final picked = await showTimePicker(
+        context: context,
+        initialTime: initial,
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: Theme.of(context).colorScheme.copyWith(
+                    primary: AppColors.gold,
+                    surface: AppColors.surface,
+                  ),
+            ),
+            child: child!,
+          );
+        },
+      );
+      if (picked != null) cubit.onTimeSelected(picked);
+    }
   }
 
   Future<void> _confirmCancel(BuildContext context) async {
