@@ -29,6 +29,16 @@ class VersalApp extends StatelessWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
+        // Tapping anywhere outside a focused text field dismisses the
+        // keyboard app-wide, without every screen needing its own
+        // GestureDetector.
+        builder: (context, child) {
+          return GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+            child: child,
+          );
+        },
         home: const _AuthGate(),
       ),
     );
@@ -51,10 +61,27 @@ class _AuthGate extends StatelessWidget {
           case AuthStatus.unauthenticated:
             return const LoginPage();
           case AuthStatus.unknown:
+            //Versal Barbershop
             return Scaffold(
+              key: const ValueKey('unknown_splash'),
               body: GradientBackground(
-                child: const Center(
-                  child: CircularProgressIndicator(color: AppColors.gold),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircularProgressIndicator(color: AppColors.gold),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Versal Barbershop',
+                        style: TextStyle(
+                          color: AppColors.gold,
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

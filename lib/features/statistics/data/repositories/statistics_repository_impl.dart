@@ -16,4 +16,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
   Future<List<MonthlyStat>> getClientMonthlyBreakdown(String phoneNumber) {
     return _remoteDataSource.getClientMonthlyBreakdown(phoneNumber);
   }
+
+  @override
+  Future<List<ClientStat>> searchClients(String query) => _remoteDataSource.searchClients(query);
 }

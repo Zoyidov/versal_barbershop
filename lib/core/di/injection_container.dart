@@ -26,8 +26,10 @@ import '../../features/statistics/data/datasources/statistics_remote_data_source
 import '../../features/statistics/data/repositories/statistics_repository_impl.dart';
 import '../../features/statistics/domain/repositories/statistics_repository.dart';
 import '../../features/statistics/domain/usecases/get_client_monthly_breakdown_usecase.dart';
+import '../../features/statistics/domain/usecases/search_clients_usecase.dart';
 import '../../features/statistics/domain/usecases/watch_client_stats_usecase.dart';
 import '../../features/statistics/presentation/cubit/client_detail_cubit.dart';
+import '../../features/statistics/presentation/cubit/client_search_cubit.dart';
 import '../../features/statistics/presentation/cubit/statistics_cubit.dart';
 
 import '../../features/settings/data/datasources/settings_remote_data_source.dart';
@@ -103,10 +105,12 @@ Future<void> initDependencies() async {
   );
   sl.registerLazySingleton(() => WatchClientStatsUseCase(sl()));
   sl.registerLazySingleton(() => GetClientMonthlyBreakdownUseCase(sl()));
+  sl.registerLazySingleton(() => SearchClientsUseCase(sl()));
   sl.registerFactory(() => StatisticsCubit(watchClientStatsUseCase: sl()));
   sl.registerFactory(
     () => ClientDetailCubit(getClientMonthlyBreakdownUseCase: sl()),
   );
+  sl.registerFactory(() => ClientSearchCubit(searchClientsUseCase: sl()));
 
   // ---- Settings feature ----
   sl.registerLazySingleton<SettingsRemoteDataSource>(

@@ -5,6 +5,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/utils/phone_input_formatter.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/glass_card.dart';
@@ -44,7 +45,7 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
   void initState() {
     super.initState();
     final state = context.read<AppointmentFormCubit>().state;
-    _phoneController = TextEditingController(text: state.phoneNumber);
+    _phoneController = TextEditingController(text: UzPhoneInputFormatter.formatDisplay(state.phoneNumber));
     _nameController = TextEditingController(text: state.clientName);
   }
 
@@ -150,8 +151,8 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
                                 AppTextField(
                                   controller: _phoneController,
                                   label: 'Telefon raqami *',
-                                  hint: '90 123 45 67',
                                   keyboardType: TextInputType.phone,
+                                  inputFormatters: [UzPhoneInputFormatter()],
                                   prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.textSecondary),
                                   onChanged: cubit.onPhoneChanged,
                                 ),

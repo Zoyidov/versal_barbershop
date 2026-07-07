@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/phone_input_formatter.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -19,7 +20,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _phoneController = TextEditingController();
+  final _phoneController = TextEditingController(text: UzPhoneInputFormatter.initialText);
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
@@ -84,9 +85,9 @@ class _LoginPageState extends State<LoginPage> {
                             AppTextField(
                               controller: _phoneController,
                               label: 'Telefon raqami',
-                              hint: '90 123 45 67',
                               keyboardType: TextInputType.phone,
                               validator: Validators.phoneNumber,
+                              inputFormatters: [UzPhoneInputFormatter()],
                               prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.textSecondary),
                             ),
                             const SizedBox(height: 16),

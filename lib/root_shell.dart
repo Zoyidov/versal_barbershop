@@ -5,6 +5,7 @@ import 'core/widgets/custom_bottom_nav_bar.dart';
 import 'core/widgets/gradient_background.dart';
 import 'features/appointments/presentation/pages/dashboard_page.dart';
 import 'features/settings/presentation/pages/settings_page.dart';
+import 'features/statistics/presentation/pages/client_search_page.dart';
 import 'features/statistics/presentation/pages/statistics_page.dart';
 
 /// Authenticated app shell: three tabs behind the static bottom nav bar.
@@ -47,6 +48,11 @@ class _RootShellState extends State<RootShell> {
         currentIndex: _index,
         items: _items,
         onTap: (index) => setState(() => _index = index),
+        onSearchTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ClientSearchPage()),
+          );
+        },
       ),
     );
   }

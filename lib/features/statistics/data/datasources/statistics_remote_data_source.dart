@@ -9,6 +9,7 @@ import '../models/client_stat_model.dart';
 abstract class StatisticsRemoteDataSource {
   Stream<List<ClientStatModel>> watchClientStats();
   Future<List<MonthlyStat>> getClientMonthlyBreakdown(String phoneNumber);
+  Future<List<ClientStatModel>> searchClients(String query);
 }
 
 class StatisticsRemoteDataSourceImpl implements StatisticsRemoteDataSource {
@@ -61,6 +62,43 @@ class StatisticsRemoteDataSourceImpl implements StatisticsRemoteDataSource {
       return result;
     } catch (e) {
       throw AppException('Mijoz tarixini yuklab bo\'lmadi: $e');
+    }
+  }
+
+  @override
+  Future<List<ClientStatModel>> searchClients(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return [];
+
+    try {
+      // Firestore can only do prefix range queries, not "contains", and the
+      // barber wants a match on *any* part of the phone number or name -
+      // e.g. typing the middle digits of a number should still find it. At
+      // this app's scale (one shop's client list) it's simpler and more
+      // correct to pull the client list once and filter in Dart than to
+      // fake substring search with several prefix queries.
+      final snapshot = await _firestore
+          .collection(FirestorePaths.clients)
+          .orderBy(ClientFields.totalVisits, descending: true)
+          .limit(1000)
+          .get();
+
+      final queryDigits = trimmed.replaceAll(RegExp(r'\D'), '');
+      final queryLower = trimmed.toLowerCase();
+
+      final matches = snapshot.docs.where((doc) {
+        final data = doc.data();
+        final phoneDigits = (data[ClientFields.phoneNumber] as String? ?? '').replaceAll(RegExp(r'\D'), '');
+        final name = (data[ClientFields.lastName] as String? ?? '').toLowerCase();
+
+        final phoneMatches = queryDigits.isNotEmpty && phoneDigits.contains(queryDigits);
+        final nameMatches = queryLower.isNotEmpty && name.contains(queryLower);
+        return phoneMatches || nameMatches;
+      }).map(ClientStatModel.fromSnapshot);
+
+      return matches.take(30).toList();
+    } catch (e) {
+      throw AppException('Qidiruvda xatolik: $e');
     }
   }
 }

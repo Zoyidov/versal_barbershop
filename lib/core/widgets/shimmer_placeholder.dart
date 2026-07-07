@@ -42,28 +42,28 @@ class AppointmentCardShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.surface.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.surfaceGlassBorder),
       ),
       child: Row(
         children: [
-          const ShimmerBlock(height: 46, width: 46, borderRadius: BorderRadius.all(Radius.circular(14))),
-          const SizedBox(width: 14),
+          const ShimmerBlock(height: 40, width: 44, borderRadius: BorderRadius.all(Radius.circular(11))),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
-                ShimmerBlock(height: 14, width: 140),
-                SizedBox(height: 8),
-                ShimmerBlock(height: 12, width: 90),
+                ShimmerBlock(height: 13, width: 120),
+                SizedBox(height: 6),
+                ShimmerBlock(height: 11, width: 80),
               ],
             ),
           ),
-          const ShimmerBlock(height: 20, width: 50),
+          const ShimmerBlock(height: 16, width: 40),
         ],
       ),
     );

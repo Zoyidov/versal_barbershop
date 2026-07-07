@@ -10,4 +10,8 @@ abstract class StatisticsRepository {
   /// phone number by querying that client's appointment history and
   /// bucketing client-side (cheap: bounded by one client's volume).
   Future<List<MonthlyStat>> getClientMonthlyBreakdown(String phoneNumber);
+
+  /// One-shot lookup by phone-number prefix and/or name prefix, for the
+  /// nav bar's client search.
+  Future<List<ClientStat>> searchClients(String query);
 }
