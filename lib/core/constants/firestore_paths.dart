@@ -51,6 +51,8 @@ class SettingsFields {
 
   static const String reminderWindowMinutes = 'reminderWindowMinutes';
   static const String shopName = 'shopName';
+  static const String scheduleStartHour = 'scheduleStartHour';
+  static const String scheduleEndHour = 'scheduleEndHour';
   static const String updatedAt = 'updatedAt';
   static const String updatedBy = 'updatedBy';
 }

@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/error/app_exception.dart';
+import '../../../settings/domain/usecases/watch_settings_usecase.dart';
 import '../../domain/entities/appointment.dart';
 import '../../domain/usecases/cancel_appointment_usecase.dart';
 import '../../domain/usecases/watch_appointments_for_day_usecase.dart';
@@ -11,21 +12,33 @@ import '../../domain/usecases/watch_appointments_for_day_usecase.dart';
 part 'dashboard_state.dart';
 
 /// Drives the main dashboard: the horizontal week-day strip plus the
-/// real-time list of appointments for whichever day is selected.
-/// Defaults to today on creation, per spec.
+/// real-time hourly schedule of appointments for whichever day is
+/// selected. Defaults to today on creation, per spec. Also watches the
+/// shop-wide schedule hours (settings/global) so the timetable's start
+/// and end times stay in sync with what's configured in Settings.
 class DashboardCubit extends Cubit<DashboardState> {
   final WatchAppointmentsForDayUseCase _watchAppointmentsForDayUseCase;
   final CancelAppointmentUseCase _cancelAppointmentUseCase;
+  final WatchSettingsUseCase _watchSettingsUseCase;
 
   StreamSubscription<List<Appointment>>? _subscription;
+  StreamSubscription<dynamic>? _settingsSubscription;
 
   DashboardCubit({
     required WatchAppointmentsForDayUseCase watchAppointmentsForDayUseCase,
     required CancelAppointmentUseCase cancelAppointmentUseCase,
+    required WatchSettingsUseCase watchSettingsUseCase,
   })  : _watchAppointmentsForDayUseCase = watchAppointmentsForDayUseCase,
         _cancelAppointmentUseCase = cancelAppointmentUseCase,
+        _watchSettingsUseCase = watchSettingsUseCase,
         super(DashboardState(selectedDay: DateTime.now())) {
     _subscribeToDay(state.selectedDay);
+    _settingsSubscription = _watchSettingsUseCase().listen((settings) {
+      emit(state.copyWith(
+        scheduleStartHour: settings.scheduleStartHour,
+        scheduleEndHour: settings.scheduleEndHour,
+      ));
+    });
   }
 
   void selectDay(DateTime day) {
@@ -34,7 +47,19 @@ class DashboardCubit extends Cubit<DashboardState> {
     _subscribeToDay(day);
   }
 
-  void _subscribeToDay(DateTime day) {
+  /// Re-establishes the appointments listener for the currently selected
+  /// day. The data itself is already real-time (Firestore pushes updates
+  /// as they happen), so this exists for the pull-to-refresh gesture: it
+  /// gives the user a way to force a fresh round-trip to the server (handy
+  /// after e.g. a flaky connection) and returns once the next snapshot (or
+  /// an error) comes back, which is what [RefreshIndicator] awaits.
+  Future<void> refresh() {
+    final completer = Completer<void>();
+    _subscribeToDay(state.selectedDay, completer: completer);
+    return completer.future;
+  }
+
+  void _subscribeToDay(DateTime day, {Completer<void>? completer}) {
     _subscription?.cancel();
     _subscription = _watchAppointmentsForDayUseCase(day).listen(
       (appointments) {
@@ -43,10 +68,12 @@ class DashboardCubit extends Cubit<DashboardState> {
           appointments: appointments,
           clearError: true,
         ));
+        if (completer != null && !completer.isCompleted) completer.complete();
       },
       onError: (error) {
         final message = error is AppException ? error.message : 'Uchrashuvlarni yuklab bo\'lmadi.';
         emit(state.copyWith(status: DashboardStatus.error, errorMessage: message));
+        if (completer != null && !completer.isCompleted) completer.complete();
       },
     );
   }
@@ -65,6 +92,7 @@ class DashboardCubit extends Cubit<DashboardState> {
   @override
   Future<void> close() {
     _subscription?.cancel();
+    _settingsSubscription?.cancel();
     return super.close();
   }
 }

@@ -6,10 +6,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/widgets/shimmer_placeholder.dart';
+import '../../../../core/widgets/week_calendar_strip.dart';
+import '../../../public_booking/presentation/pages/public_booking_page.dart';
 import '../../domain/entities/appointment.dart';
 import '../cubit/dashboard_cubit.dart';
-import '../widgets/appointment_card.dart';
-import '../widgets/week_calendar_strip.dart';
+import '../widgets/schedule_timetable.dart';
 import 'appointment_form_page.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -86,22 +87,71 @@ class _DashboardView extends StatelessWidget {
                   onDaySelected: (day) => context.read<DashboardCubit>().selectDay(day),
                 ),
                 const SizedBox(height: 8),
-                Expanded(child: _buildBody(context, state)),
+                Expanded(
+                  child: RefreshIndicator(
+                    color: AppColors.gold,
+                    onRefresh: () => context.read<DashboardCubit>().refresh(),
+                    child: _buildBody(context, state),
+                  ),
+                ),
               ],
             );
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      // floatingActionButton: FloatingActionButton(
+      //   backgroundColor: AppColors.gold,
+      //   foregroundColor: AppColors.background,
+      //   onPressed: () {
+      //     final selectedDay = context.read<DashboardCubit>().state.selectedDay;
+      //     _openForm(context, selectedDay);
+      //   },
+      //   child: const Icon(Icons.add),
+      // ),
+      floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.gold,
         foregroundColor: AppColors.background,
-        onPressed: () {
-          final selectedDay = context.read<DashboardCubit>().state.selectedDay;
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => AppointmentFormPage(defaultDay: selectedDay)),
-          );
-        },
-        child: const Icon(Icons.add),
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const PublicBookingPage()),
+        ),
+        icon: const Icon(Icons.event_available),
+        label: const Text('Mijoz uchun band qilish'),
+      ),
+    );
+  }
+
+  /// Editing an existing appointment keeps the full-page flow; adding a new
+  /// one from the dashboard (FAB or an hour slot) opens as a bottom sheet
+  /// instead, so the barber never leaves the schedule view.
+  void _openForm(
+    BuildContext context,
+    DateTime day, {
+    TimeOfDay? time,
+    Appointment? existing,
+  }) {
+    if (existing != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => AppointmentFormPage(defaultDay: day, defaultTime: time, existing: existing),
+        ),
+      );
+      return;
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => FractionallySizedBox(
+        heightFactor: 0.80,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          child: MediaQuery.removePadding(
+            context: sheetContext,
+            removeTop: true,
+            child: AppointmentFormPage(defaultDay: day, defaultTime: time),
+          ),
+        ),
       ),
     );
   }
@@ -115,36 +165,15 @@ class _DashboardView extends StatelessWidget {
       );
     }
 
-    if (state.appointments.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.event_available_outlined, size: 48, color: AppColors.textMuted),
-            const SizedBox(height: 12),
-            Text('Bu kunga uchrashuvlar yo\'q', style: AppTextStyles.bodyMuted),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-      itemCount: state.appointments.length,
-      itemBuilder: (context, index) {
-        final appointment = state.appointments[index];
-        return AppointmentCard(
-          appointment: appointment,
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => AppointmentFormPage(defaultDay: state.selectedDay, existing: appointment),
-              ),
-            );
-          },
-          onQuickCancel: () => _confirmCancel(context, appointment),
-        );
-      },
+    return ScheduleTimetable(
+      appointments: state.appointments,
+      startHour: state.scheduleStartHour,
+      endHour: state.scheduleEndHour,
+      day: state.selectedDay,
+      onTapAppointment: (appointment) =>
+          _openForm(context, state.selectedDay, existing: appointment),
+      onQuickCancel: (appointment) => _confirmCancel(context, appointment),
+      onAddForHour: (hour) => _openForm(context, state.selectedDay, time: TimeOfDay(hour: hour, minute: 0)),
     );
   }
 }

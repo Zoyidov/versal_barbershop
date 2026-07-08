@@ -55,4 +55,12 @@ class Validators {
     if (parsed < 1 || parsed > 1440) return '1 dan 1440 gacha bo\'lishi kerak';
     return null;
   }
+
+  static String? hourOfDay(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Majburiy';
+    final parsed = int.tryParse(value.trim());
+    if (parsed == null) return 'Butun son kiriting';
+    if (parsed < 0 || parsed > 23) return '0 dan 23 gacha bo\'lishi kerak';
+    return null;
+  }
 }

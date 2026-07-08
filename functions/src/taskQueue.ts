@@ -2,6 +2,7 @@ import { CloudTasksClient } from '@google-cloud/tasks';
 import { defineSecret } from 'firebase-functions/params';
 import { logger } from 'firebase-functions/v2';
 import { REGION, TASKS_LOCATION, TASKS_QUEUE_NAME } from './config';
+import { errorMessage } from './util';
 
 const tasksClient = new CloudTasksClient();
 
@@ -84,7 +85,7 @@ export async function cancelReminderTask(taskName: string | null | undefined): P
   } catch (error) {
     const code = (error as { code?: number }).code;
     if (code === 5) return; // NOT_FOUND - already fired or already cancelled.
-    logger.error('Failed to cancel reminder task', { taskName, error });
+    logger.error('Failed to cancel reminder task', { taskName, message: errorMessage(error), error });
     throw error;
   }
 }

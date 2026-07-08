@@ -30,10 +30,15 @@ export interface ClientDoc {
   updatedAt: Timestamp;
 }
 
-/** Mirrors `settings/global` — shop-wide configuration. */
+/** Mirrors `settings/global` — shop-wide configuration.
+ * `scheduleStartHour`/`scheduleEndHour` are written directly by the Flutter
+ * client (`settings_remote_data_source.dart`) and read here only by
+ * `publicBooking.ts` - optional because older docs may predate them. */
 export interface SettingsDoc {
   reminderWindowMinutes: number;
   shopName: string;
+  scheduleStartHour?: number;
+  scheduleEndHour?: number;
 }
 
 /** Mirrors `users/{uid}` — barber accounts. Never sent to the client. */

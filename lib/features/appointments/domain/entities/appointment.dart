@@ -2,6 +2,10 @@ import 'package:equatable/equatable.dart';
 
 enum AppointmentStatus { scheduled, cancelled, completed }
 
+/// Reminder-SMS delivery state shown as a status indicator on the
+/// dashboard, derived from `Appointment.smsDeliveryState`.
+enum SmsDeliveryState { disabled, pending, sent, failed }
+
 extension AppointmentStatusX on AppointmentStatus {
   String get value => name;
 
@@ -45,6 +49,20 @@ class Appointment extends Equatable {
   });
 
   bool get isCancelled => status == AppointmentStatus.cancelled;
+
+  /// Derives the reminder-SMS delivery state from the raw `sendSms` /
+  /// `smsSent` / `smsStatus` fields synced from Firestore (see
+  /// `smsReminderTask.ts`, which is the only writer of `smsStatus`).
+  /// `sent`/`failed` always win once Cloud Tasks has actually fired the
+  /// reminder; otherwise a cancelled or opted-out appointment has no
+  /// reminder in flight (`disabled`), and anything else is still waiting
+  /// on its scheduled Cloud Task (`pending`).
+  SmsDeliveryState get smsDeliveryState {
+    if (smsSent || smsStatus == 'sent') return SmsDeliveryState.sent;
+    if (smsStatus == 'failed') return SmsDeliveryState.failed;
+    if (!sendSms || isCancelled) return SmsDeliveryState.disabled;
+    return SmsDeliveryState.pending;
+  }
 
   Appointment copyWith({
     String? id,

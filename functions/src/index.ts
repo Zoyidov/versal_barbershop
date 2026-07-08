@@ -10,3 +10,5 @@ export { loginWithPhonePassword } from './auth';
 export { onAppointmentCreated, onAppointmentUpdated } from './appointmentTriggers';
 export { onGlobalSettingsUpdated } from './settingsTriggers';
 export { sendSmsReminderTask } from './smsReminderTask';
+export { getSmsBalance } from './smsBalance';
+export { getPublicDaySlots, createPublicBooking } from './publicBooking';

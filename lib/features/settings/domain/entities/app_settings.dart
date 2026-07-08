@@ -9,21 +9,32 @@ import 'package:equatable/equatable.dart';
 class AppSettings extends Equatable {
   final int reminderWindowMinutes;
   final String shopName;
+  final int scheduleStartHour;
+  final int scheduleEndHour;
 
   const AppSettings({
     required this.reminderWindowMinutes,
     required this.shopName,
+    this.scheduleStartHour = 6,
+    this.scheduleEndHour = 20,
   });
 
   static const AppSettings fallback = AppSettings(reminderWindowMinutes: 40, shopName: 'Versal Barbershop');
 
-  AppSettings copyWith({int? reminderWindowMinutes, String? shopName}) {
+  AppSettings copyWith({
+    int? reminderWindowMinutes,
+    String? shopName,
+    int? scheduleStartHour,
+    int? scheduleEndHour,
+  }) {
     return AppSettings(
       reminderWindowMinutes: reminderWindowMinutes ?? this.reminderWindowMinutes,
       shopName: shopName ?? this.shopName,
+      scheduleStartHour: scheduleStartHour ?? this.scheduleStartHour,
+      scheduleEndHour: scheduleEndHour ?? this.scheduleEndHour,
     );
   }
 
   @override
-  List<Object?> get props => [reminderWindowMinutes, shopName];
+  List<Object?> get props => [reminderWindowMinutes, shopName, scheduleStartHour, scheduleEndHour];
 }

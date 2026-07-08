@@ -5,6 +5,7 @@ import { REGION } from './config';
 import { taskSecret } from './taskQueue';
 import { devsmsSmsTemplate, sendReminderSms } from './smsGateway';
 import type { AppointmentDoc } from './types';
+import { errorMessage } from './util';
 
 const db = getFirestore();
 
@@ -86,11 +87,11 @@ export const sendSmsReminderTask = onRequest(
       });
       res.status(200).send('SMS sent.');
     } catch (error) {
-      logger.error('Failed to send SMS reminder', { appointmentId, error });
+      logger.error('Failed to send SMS reminder', { appointmentId, message: errorMessage(error), error });
       await ref.update({ smsStatus: 'failed', reminderTaskName: null });
       // Non-2xx tells Cloud Tasks to retry according to the queue's retry
       // policy instead of silently swallowing a failed delivery.
-      res.status(500).send(`Failed to send SMS: ${(error as Error).message}`);
+      res.status(500).send(`Failed to send SMS: ${errorMessage(error)}`);
     }
   },
 );

@@ -26,14 +26,15 @@ import '../widgets/service_type_chips.dart';
 
 class AppointmentFormPage extends StatelessWidget {
   final DateTime defaultDay;
+  final TimeOfDay? defaultTime;
   final Appointment? existing;
 
-  const AppointmentFormPage({super.key, required this.defaultDay, this.existing});
+  const AppointmentFormPage({super.key, required this.defaultDay, this.defaultTime, this.existing});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<AppointmentFormCubit>()..init(defaultDay: defaultDay, existing: existing),
+      create: (_) => sl<AppointmentFormCubit>()..init(defaultDay: defaultDay, defaultTime: defaultTime, existing: existing),
       child: const _AppointmentFormView(),
     );
   }
@@ -78,12 +79,7 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
             data: const CupertinoThemeData(
               brightness: Brightness.dark,
               primaryColor: AppColors.gold,
-              textTheme: CupertinoTextThemeData(
-                dateTimePickerTextStyle: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 20,
-                ),
-              ),
+              textTheme: CupertinoTextThemeData(dateTimePickerTextStyle: TextStyle(color: AppColors.textPrimary, fontSize: 20)),
             ),
             child: Material(
               color: Colors.transparent,
@@ -92,9 +88,7 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
                 decoration: const BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                  border: Border(
-                    top: BorderSide(color: AppColors.surfaceGlassBorder, width: 0.5),
-                  ),
+                  border: Border(top: BorderSide(color: AppColors.surfaceGlassBorder, width: 0.5)),
                 ),
                 child: SafeArea(
                   top: false,
@@ -103,17 +97,12 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: const BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: AppColors.surfaceGlassBorder, width: 0.5),
-                          ),
+                          border: Border(bottom: BorderSide(color: AppColors.surfaceGlassBorder, width: 0.5)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Vaqtni tanlang',
-                              style: AppTextStyles.title.copyWith(fontSize: 16),
-                            ),
+                            Text('Vaqtni tanlang', style: AppTextStyles.title.copyWith(fontSize: 16)),
                             CupertinoButton(
                               padding: EdgeInsets.zero,
                               onPressed: () {
@@ -122,10 +111,7 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
                               },
                               child: const Text(
                                 'Tayyor',
-                                style: TextStyle(
-                                  color: AppColors.gold,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ],
@@ -156,10 +142,7 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
         builder: (context, child) {
           return Theme(
             data: Theme.of(context).copyWith(
-              colorScheme: Theme.of(context).colorScheme.copyWith(
-                    primary: AppColors.gold,
-                    surface: AppColors.surface,
-                  ),
+              colorScheme: Theme.of(context).colorScheme.copyWith(primary: AppColors.gold, surface: AppColors.surface),
             ),
             child: child!,
           );
@@ -200,8 +183,7 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
       body: GradientBackground(
         child: SafeArea(
           child: BlocConsumer<AppointmentFormCubit, AppointmentFormState>(
-            listenWhen: (p, c) =>
-                p.saved != c.saved || p.cancelled != c.cancelled || p.errorMessage != c.errorMessage,
+            listenWhen: (p, c) => p.saved != c.saved || p.cancelled != c.cancelled || p.errorMessage != c.errorMessage,
             listener: (context, state) {
               if (state.saved || state.cancelled) {
                 Navigator.of(context).pop();
@@ -216,17 +198,17 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
               return Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 4, 20, 4),
+                    padding: const EdgeInsets.fromLTRB(8, 12, 20, 4),
                     child: Row(
+                      mainAxisAlignment: .spaceBetween,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
+                        (state.isEditing)?
+                          IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.arrow_back_ios)): SizedBox(),
                         Text(
                           state.isEditing ? 'Uchrashuvni tahrirlash' : 'Yangi uchrashuv',
                           style: AppTextStyles.headline.copyWith(fontSize: 19),
                         ),
+                        SizedBox(),
                       ],
                     ),
                   ),
@@ -279,25 +261,28 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
                               children: [
                                 const Icon(Icons.access_time, color: AppColors.gold),
                                 const SizedBox(width: 12),
-                                Text(
-                                  state.time == null
-                                      ? 'Uchrashuv vaqtini tanlang'
-                                      : state.time!.format(context),
-                                  style: AppTextStyles.body,
+                                Flexible(
+                                  child: Text(
+                                    state.time == null ? 'Uchrashuv vaqtini tanlang' : state.time!.format(context),
+                                    style: AppTextStyles.body,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
+                                const SizedBox(width: 8),
                                 const Spacer(),
                                 Text(DateFormatter.fullDate(state.day), style: AppTextStyles.caption),
                               ],
                             ),
                           ),
                           const SizedBox(height: 18),
-                          Text('Xizmat turi (ixtiyoriy)', style: AppTextStyles.title),
-                          const SizedBox(height: 10),
-                          ServiceTypeChips(
-                            selected: state.serviceType,
-                            onSelected: cubit.onServiceTypeSelected,
-                          ),
-                          const SizedBox(height: 18),
+                          // Text('Xizmat turi (ixtiyoriy)', style: AppTextStyles.title),
+                          // const SizedBox(height: 10),
+                          // ServiceTypeChips(
+                          //   selected: state.serviceType,
+                          //   onSelected: cubit.onServiceTypeSelected,
+                          // ),
+                          // const SizedBox(height: 18),
                           GlassCard(
                             child: Row(
                               children: [
@@ -308,17 +293,11 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text('Eslatma SMS yuborish', style: AppTextStyles.title.copyWith(fontSize: 15)),
-                                      Text(
-                                        'Uchrashuvdan oldin avtomatik yuboriladi',
-                                        style: AppTextStyles.caption,
-                                      ),
+                                      Text('Uchrashuvdan oldin avtomatik yuboriladi', style: AppTextStyles.caption),
                                     ],
                                   ),
                                 ),
-                                Switch(
-                                  value: state.sendSms,
-                                  onChanged: cubit.toggleSendSms,
-                                ),
+                                Switch(value: state.sendSms, onChanged: cubit.toggleSendSms),
                               ],
                             ),
                           ),

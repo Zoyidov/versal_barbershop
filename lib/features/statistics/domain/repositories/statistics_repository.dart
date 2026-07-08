@@ -1,4 +1,5 @@
 import '../entities/client_stat.dart';
+import '../entities/client_visit.dart';
 import '../entities/monthly_stat.dart';
 
 abstract class StatisticsRepository {
@@ -10,6 +11,10 @@ abstract class StatisticsRepository {
   /// phone number by querying that client's appointment history and
   /// bucketing client-side (cheap: bounded by one client's volume).
   Future<List<MonthlyStat>> getClientMonthlyBreakdown(String phoneNumber);
+
+  /// The same client's appointment history as individual dated entries
+  /// (newest first), for the client detail screen's visit-history list.
+  Future<List<ClientVisit>> getClientVisits(String phoneNumber);
 
   /// One-shot lookup by phone-number prefix and/or name prefix, for the
   /// nav bar's client search.

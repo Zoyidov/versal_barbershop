@@ -7,12 +7,16 @@ class DashboardState extends Equatable {
   final DashboardStatus status;
   final List<Appointment> appointments;
   final String? errorMessage;
+  final int scheduleStartHour;
+  final int scheduleEndHour;
 
   const DashboardState({
     required this.selectedDay,
     this.status = DashboardStatus.loading,
     this.appointments = const [],
     this.errorMessage,
+    this.scheduleStartHour = 6,
+    this.scheduleEndHour = 20,
   });
 
   DashboardState copyWith({
@@ -21,15 +25,20 @@ class DashboardState extends Equatable {
     List<Appointment>? appointments,
     String? errorMessage,
     bool clearError = false,
+    int? scheduleStartHour,
+    int? scheduleEndHour,
   }) {
     return DashboardState(
       selectedDay: selectedDay ?? this.selectedDay,
       status: status ?? this.status,
       appointments: appointments ?? this.appointments,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      scheduleStartHour: scheduleStartHour ?? this.scheduleStartHour,
+      scheduleEndHour: scheduleEndHour ?? this.scheduleEndHour,
     );
   }
 
   @override
-  List<Object?> get props => [selectedDay, status, appointments, errorMessage];
+  List<Object?> get props =>
+      [selectedDay, status, appointments, errorMessage, scheduleStartHour, scheduleEndHour];
 }
