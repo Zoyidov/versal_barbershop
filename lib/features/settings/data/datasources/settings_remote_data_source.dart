@@ -8,6 +8,7 @@ import '../models/app_settings_model.dart';
 abstract class SettingsRemoteDataSource {
   Stream<AppSettingsModel> watchSettings();
   Future<void> updateReminderWindow(int minutes);
+  Future<void> updateScheduleHours(int startHour, int endHour);
 }
 
 class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
@@ -35,6 +36,20 @@ class SettingsRemoteDataSourceImpl implements SettingsRemoteDataSource {
       }, SetOptions(merge: true));
     } catch (e) {
       throw AppException('Eslatma vaqtini yangilab bo\'lmadi: $e');
+    }
+  }
+
+  @override
+  Future<void> updateScheduleHours(int startHour, int endHour) async {
+    try {
+      await _doc.set({
+        SettingsFields.scheduleStartHour: startHour,
+        SettingsFields.scheduleEndHour: endHour,
+        SettingsFields.updatedAt: FieldValue.serverTimestamp(),
+        SettingsFields.updatedBy: FirebaseAuth.instance.currentUser?.uid,
+      }, SetOptions(merge: true));
+    } catch (e) {
+      throw AppException('Jadval vaqtini yangilab bo\'lmadi: $e');
     }
   }
 }

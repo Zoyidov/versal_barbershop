@@ -38,10 +38,12 @@ class AppointmentFormCubit extends Cubit<AppointmentFormState> {
         super(AppointmentFormState(day: DateTime.now()));
 
   /// Called once when the form opens. [defaultDay] is the day currently
-  /// selected on the dashboard; [existing] is non-null when editing.
-  void init({required DateTime defaultDay, Appointment? existing}) {
+  /// selected on the dashboard; [defaultTime] is pre-filled when the form
+  /// was opened from a specific hour slot on the timetable; [existing] is
+  /// non-null when editing.
+  void init({required DateTime defaultDay, TimeOfDay? defaultTime, Appointment? existing}) {
     if (existing == null) {
-      emit(AppointmentFormState(day: defaultDay));
+      emit(AppointmentFormState(day: defaultDay, time: defaultTime));
       return;
     }
     emit(AppointmentFormState(

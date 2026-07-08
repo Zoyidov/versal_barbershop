@@ -13,4 +13,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<void> updateReminderWindow(int minutes) => _remoteDataSource.updateReminderWindow(minutes);
+
+  @override
+  Future<void> updateScheduleHours(int startHour, int endHour) =>
+      _remoteDataSource.updateScheduleHours(startHour, endHour);
 }
