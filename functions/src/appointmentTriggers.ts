@@ -105,11 +105,27 @@ export const onAppointmentUpdated = onDocumentUpdated(
     if (before.status === 'scheduled' && after.status === 'cancelled') {
       await db.runTransaction(async (tx) => {
         const clientRef = db.collection('clients').doc(after.clientPhone);
-        tx.update(clientRef, {
-          totalVisits: FieldValue.increment(-1),
-          totalCancellations: FieldValue.increment(1),
-          updatedAt: FieldValue.serverTimestamp(),
-        });
+        const clientDoc = await tx.get(clientRef);
+        if (clientDoc.exists) {
+          tx.update(clientRef, {
+            totalVisits: FieldValue.increment(-1),
+            totalCancellations: FieldValue.increment(1),
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+        } else {
+          // Client aggregate is missing (phone format drift, manual doc
+          // deletion, etc.) - tx.update() on a nonexistent doc throws
+          // NOT_FOUND, which used to abort this whole handler *before* it
+          // reached cancelReminderTask() below, leaving the Cloud Task
+          // alive to fire a stale reminder later.
+          tx.set(clientRef, {
+            phoneNumber: after.clientPhone,
+            lastName: after.clientName,
+            totalVisits: 0,
+            totalCancellations: 1,
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+        }
       });
 
       try {
