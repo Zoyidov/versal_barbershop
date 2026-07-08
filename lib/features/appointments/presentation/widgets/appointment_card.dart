@@ -107,6 +107,7 @@ class AppointmentCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
+            _SmsStatusIcon(state: appointment.smsDeliveryState),
             if (!isCancelled)
               InkWell(
                 borderRadius: BorderRadius.circular(20),
@@ -115,15 +116,36 @@ class AppointmentCard extends StatelessWidget {
                   padding: EdgeInsets.all(6),
                   child: Icon(Icons.close_rounded, color: AppColors.textMuted, size: 18),
                 ),
-              )
-            else
-              Icon(
-                appointment.sendSms ? Icons.sms_outlined : Icons.sms_failed_outlined,
-                color: AppColors.textMuted,
-                size: 16,
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Small trailing indicator reflecting the reminder SMS's real delivery
+/// state (`Appointment.smsDeliveryState`), not just whether the barber
+/// left the "send SMS" toggle on.
+class _SmsStatusIcon extends StatelessWidget {
+  final SmsDeliveryState state;
+
+  const _SmsStatusIcon({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, color, label) = switch (state) {
+      SmsDeliveryState.disabled => (Icons.sms_outlined, AppColors.textMuted, 'SMS yuborilmaydi'),
+      SmsDeliveryState.pending => (Icons.schedule_rounded, AppColors.warning, 'SMS kutilmoqda'),
+      SmsDeliveryState.sent => (Icons.mark_email_read_outlined, AppColors.success, 'SMS yuborildi'),
+      SmsDeliveryState.failed => (Icons.sms_failed_outlined, AppColors.danger, 'SMS yuborilmadi'),
+    };
+
+    return Tooltip(
+      message: label,
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Icon(icon, color: color, size: 16),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import '../../domain/entities/client_stat.dart';
+import '../../domain/entities/client_visit.dart';
 import '../../domain/entities/monthly_stat.dart';
 import '../../domain/repositories/statistics_repository.dart';
 import '../datasources/statistics_remote_data_source.dart';
@@ -15,6 +16,11 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
   @override
   Future<List<MonthlyStat>> getClientMonthlyBreakdown(String phoneNumber) {
     return _remoteDataSource.getClientMonthlyBreakdown(phoneNumber);
+  }
+
+  @override
+  Future<List<ClientVisit>> getClientVisits(String phoneNumber) {
+    return _remoteDataSource.getClientVisits(phoneNumber);
   }
 
   @override

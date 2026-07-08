@@ -26,11 +26,19 @@ import '../../features/statistics/data/datasources/statistics_remote_data_source
 import '../../features/statistics/data/repositories/statistics_repository_impl.dart';
 import '../../features/statistics/domain/repositories/statistics_repository.dart';
 import '../../features/statistics/domain/usecases/get_client_monthly_breakdown_usecase.dart';
+import '../../features/statistics/domain/usecases/get_client_visits_usecase.dart';
 import '../../features/statistics/domain/usecases/search_clients_usecase.dart';
 import '../../features/statistics/domain/usecases/watch_client_stats_usecase.dart';
 import '../../features/statistics/presentation/cubit/client_detail_cubit.dart';
 import '../../features/statistics/presentation/cubit/client_search_cubit.dart';
 import '../../features/statistics/presentation/cubit/statistics_cubit.dart';
+
+import '../../features/public_booking/data/datasources/public_booking_remote_data_source.dart';
+import '../../features/public_booking/data/repositories/public_booking_repository_impl.dart';
+import '../../features/public_booking/domain/repositories/public_booking_repository.dart';
+import '../../features/public_booking/domain/usecases/create_public_booking_usecase.dart';
+import '../../features/public_booking/domain/usecases/get_public_day_slots_usecase.dart';
+import '../../features/public_booking/presentation/cubit/public_booking_cubit.dart';
 
 import '../../features/settings/data/datasources/settings_remote_data_source.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
@@ -111,12 +119,29 @@ Future<void> initDependencies() async {
   );
   sl.registerLazySingleton(() => WatchClientStatsUseCase(sl()));
   sl.registerLazySingleton(() => GetClientMonthlyBreakdownUseCase(sl()));
+  sl.registerLazySingleton(() => GetClientVisitsUseCase(sl()));
   sl.registerLazySingleton(() => SearchClientsUseCase(sl()));
   sl.registerFactory(() => StatisticsCubit(watchClientStatsUseCase: sl()));
   sl.registerFactory(
-    () => ClientDetailCubit(getClientMonthlyBreakdownUseCase: sl()),
+    () => ClientDetailCubit(
+      getClientMonthlyBreakdownUseCase: sl(),
+      getClientVisitsUseCase: sl(),
+    ),
   );
   sl.registerFactory(() => ClientSearchCubit(searchClientsUseCase: sl()));
+
+  // ---- Public booking feature (no auth; client self-service screen) ----
+  sl.registerLazySingleton<PublicBookingRemoteDataSource>(
+    () => PublicBookingRemoteDataSourceImpl(functions: sl()),
+  );
+  sl.registerLazySingleton<PublicBookingRepository>(
+    () => PublicBookingRepositoryImpl(remoteDataSource: sl()),
+  );
+  sl.registerLazySingleton(() => GetPublicDaySlotsUseCase(sl()));
+  sl.registerLazySingleton(() => CreatePublicBookingUseCase(sl()));
+  sl.registerFactory(
+    () => PublicBookingCubit(getDaySlotsUseCase: sl(), createBookingUseCase: sl()),
+  );
 
   // ---- Settings feature ----
   sl.registerLazySingleton<SettingsRemoteDataSource>(

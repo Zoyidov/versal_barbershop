@@ -3,12 +3,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/firestore_paths.dart';
 import '../../../../core/error/app_exception.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../domain/entities/client_visit.dart';
 import '../../domain/entities/monthly_stat.dart';
 import '../models/client_stat_model.dart';
 
 abstract class StatisticsRemoteDataSource {
   Stream<List<ClientStatModel>> watchClientStats();
   Future<List<MonthlyStat>> getClientMonthlyBreakdown(String phoneNumber);
+  Future<List<ClientVisit>> getClientVisits(String phoneNumber);
   Future<List<ClientStatModel>> searchClients(String query);
 }
 
@@ -62,6 +64,31 @@ class StatisticsRemoteDataSourceImpl implements StatisticsRemoteDataSource {
       return result;
     } catch (e) {
       throw AppException('Mijoz tarixini yuklab bo\'lmadi: $e');
+    }
+  }
+
+  @override
+  Future<List<ClientVisit>> getClientVisits(String phoneNumber) async {
+    try {
+      final snapshot = await _firestore
+          .collection(FirestorePaths.appointments)
+          .where(AppointmentFields.clientPhone, isEqualTo: phoneNumber)
+          .orderBy(AppointmentFields.appointmentTime, descending: true)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        final timestamp = data[AppointmentFields.appointmentTime] as Timestamp;
+        return ClientVisit(
+          appointmentTime: timestamp.toDate(),
+          status: data[AppointmentFields.status] as String? ?? 'scheduled',
+          serviceType: data[AppointmentFields.serviceType] as String?,
+          smsSentAt: (data[AppointmentFields.smsSentAt] as Timestamp?)?.toDate(),
+          smsStatus: data[AppointmentFields.smsStatus] as String?,
+        );
+      }).toList();
+    } catch (e) {
+      throw AppException('Mijoz tashriflar tarixini yuklab bo\'lmadi: $e');
     }
   }
 

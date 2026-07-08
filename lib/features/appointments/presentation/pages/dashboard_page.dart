@@ -6,10 +6,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/widgets/shimmer_placeholder.dart';
+import '../../../../core/widgets/week_calendar_strip.dart';
+import '../../../public_booking/presentation/pages/public_booking_page.dart';
 import '../../domain/entities/appointment.dart';
 import '../cubit/dashboard_cubit.dart';
 import '../widgets/schedule_timetable.dart';
-import '../widgets/week_calendar_strip.dart';
 import 'appointment_form_page.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -107,6 +108,15 @@ class _DashboardView extends StatelessWidget {
       //   },
       //   child: const Icon(Icons.add),
       // ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: AppColors.gold,
+        foregroundColor: AppColors.background,
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const PublicBookingPage()),
+        ),
+        icon: const Icon(Icons.event_available),
+        label: const Text('Mijoz uchun band qilish'),
+      ),
     );
   }
 

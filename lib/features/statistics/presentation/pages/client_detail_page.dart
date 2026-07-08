@@ -9,6 +9,7 @@ import '../../../../core/widgets/shimmer_placeholder.dart';
 import '../../domain/entities/client_stat.dart';
 import '../cubit/client_detail_cubit.dart';
 import '../widgets/monthly_bar_row.dart';
+import '../widgets/visit_history_row.dart';
 
 class ClientDetailPage extends StatelessWidget {
   final ClientStat client;
@@ -53,14 +54,6 @@ class ClientDetailPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('Oylik statistika', style: AppTextStyles.title),
-                  ),
-                ),
-                const SizedBox(height: 12),
                 Expanded(
                   child: BlocBuilder<ClientDetailCubit, ClientDetailState>(
                     builder: (context, state) {
@@ -74,19 +67,31 @@ class ClientDetailPage extends StatelessWidget {
                           ),
                         );
                       }
-                      if (state.monthlyStats.isEmpty) {
+                      if (state.monthlyStats.isEmpty && state.visits.isEmpty) {
                         return Center(
-                          child: Text('Hali oylik tarix yo\'q', style: AppTextStyles.bodyMuted),
+                          child: Text('Hali tashriflar tarixi yo\'q', style: AppTextStyles.bodyMuted),
                         );
                       }
                       final maxValue = state.monthlyStats
                           .map((s) => s.visits > s.cancellations ? s.visits : s.cancellations)
                           .fold(0, (a, b) => a > b ? a : b);
-                      return ListView.builder(
+                      return ListView(
                         padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                        itemCount: state.monthlyStats.length,
-                        itemBuilder: (context, index) =>
-                            MonthlyBarRow(stat: state.monthlyStats[index], maxValue: maxValue),
+                        children: [
+                          if (state.visits.isNotEmpty) ...[
+                            Text('Tashriflar tarixi', style: AppTextStyles.title),
+                            const SizedBox(height: 12),
+                            for (final visit in state.visits) VisitHistoryRow(visit: visit),
+                            const SizedBox(height: 8),
+                          ],
+                          if (state.monthlyStats.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Text('Oylik statistika', style: AppTextStyles.title),
+                            const SizedBox(height: 12),
+                            for (final stat in state.monthlyStats)
+                              MonthlyBarRow(stat: stat, maxValue: maxValue),
+                          ],
+                        ],
                       );
                     },
                   ),
