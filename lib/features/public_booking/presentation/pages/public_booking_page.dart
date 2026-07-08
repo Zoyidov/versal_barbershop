@@ -67,7 +67,7 @@ class _PublicBookingView extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8, 12, 20, 4),
-                    child: Expanded(
+                    child: Center(
                       child: Text('Band qilish', style: AppTextStyles.displayLarge.copyWith(fontSize: 24)),
                     ),
                   ),

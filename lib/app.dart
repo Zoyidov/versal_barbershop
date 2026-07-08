@@ -8,7 +8,6 @@ import 'core/theme/app_theme.dart';
 import 'core/widgets/gradient_background.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/auth/presentation/pages/login_page.dart';
-import 'features/public_booking/presentation/pages/public_booking_page.dart';
 import 'root_shell.dart';
 
 class VersalApp extends StatelessWidget {
@@ -40,7 +39,7 @@ class VersalApp extends StatelessWidget {
             child: child,
           );
         },
-        home: const PublicBookingPage(),
+        home: const _AuthGate(),
       ),
     );
   }

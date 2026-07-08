@@ -108,15 +108,17 @@ class _DashboardView extends StatelessWidget {
       //   },
       //   child: const Icon(Icons.add),
       // ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.gold,
-        foregroundColor: AppColors.background,
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const PublicBookingPage()),
-        ),
-        icon: const Icon(Icons.event_available),
-        label: const Text('Mijoz uchun band qilish'),
-      ),
+
+
+      // floatingActionButton: FloatingActionButton.extended(
+      //   backgroundColor: AppColors.gold,
+      //   foregroundColor: AppColors.background,
+      //   onPressed: () => Navigator.of(context).push(
+      //     MaterialPageRoute(builder: (_) => const PublicBookingPage()),
+      //   ),
+      //   icon: const Icon(Icons.event_available),
+      //   label: const Text('Mijoz uchun band qilish'),
+      // ),
     );
   }
 
