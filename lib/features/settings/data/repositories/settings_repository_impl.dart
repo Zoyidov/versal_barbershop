@@ -1,4 +1,5 @@
 import '../../domain/entities/app_settings.dart';
+import '../../domain/entities/sms_balance.dart';
 import '../../domain/repositories/settings_repository.dart';
 import '../datasources/settings_remote_data_source.dart';
 
@@ -17,4 +18,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
   @override
   Future<void> updateScheduleHours(int startHour, int endHour) =>
       _remoteDataSource.updateScheduleHours(startHour, endHour);
+
+  @override
+  Future<SmsBalance> getSmsBalance() => _remoteDataSource.getSmsBalance();
 }

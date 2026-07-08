@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -109,7 +110,9 @@ class _SettingsViewState extends State<_SettingsView> {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
               children: [
                 Text('Sozlamalar', style: AppTextStyles.displayLarge.copyWith(fontSize: 26)),
-                const SizedBox(height: 50),
+                const SizedBox(height: 20),
+                _buildSmsBalanceCard(context, state),
+                const SizedBox(height: 20),
                 // Text('Versal BarberShop', textAlign: TextAlign.center, style: AppTextStyles.displayLarge.copyWith(fontSize: 26)),
                 // const SizedBox(height: 20),
                 GlassCard(
@@ -287,6 +290,128 @@ class _SettingsViewState extends State<_SettingsView> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildSmsBalanceCard(BuildContext context, SettingsState state) {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.account_balance_wallet, color: AppColors.gold),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text('Balans', style: AppTextStyles.title.copyWith(fontSize: 15)),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh, color: AppColors.textSecondary, size: 20),
+                onPressed: state.smsBalanceStatus == SmsBalanceStatus.loading
+                    ? null
+                    : () => context.read<SettingsCubit>().loadSmsBalance(),
+              ),
+            ],
+          ),
+          _buildSmsBalanceBody(state),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmsBalanceBody(SettingsState state) {
+    switch (state.smsBalanceStatus) {
+      case SmsBalanceStatus.idle:
+      case SmsBalanceStatus.loading:
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: Center(
+            child: SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
+            ),
+          ),
+        );
+      case SmsBalanceStatus.error:
+        return Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+            state.smsBalanceError ?? 'Balansni yuklab bo\'lmadi.',
+            style: AppTextStyles.caption.copyWith(color: AppColors.danger),
+          ),
+        );
+      case SmsBalanceStatus.loaded:
+        final balance = state.smsBalance!;
+        final fmt = NumberFormat.decimalPattern('uz');
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 10),
+            Text(
+              '${fmt.format(balance.balance)} so\'m',
+              style: AppTextStyles.displayLarge.copyWith(fontSize: 28, color: AppColors.gold),
+            ),
+            const SizedBox(height: 2),
+            Text('1 SMS narxi: ${fmt.format(balance.smsPrice)} so\'m', style: AppTextStyles.caption),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: _SmsStatColumn(
+                    label: 'Bugun',
+                    smsCount: balance.todaySms,
+                    spent: balance.todaySpent,
+                    fmt: fmt,
+                  ),
+                ),
+                Expanded(
+                  child: _SmsStatColumn(
+                    label: 'Bu oy',
+                    smsCount: balance.monthSms,
+                    spent: balance.monthSpent,
+                    fmt: fmt,
+                  ),
+                ),
+                Expanded(
+                  child: _SmsStatColumn(
+                    label: 'Jami',
+                    smsCount: balance.totalSms,
+                    spent: balance.totalSpent,
+                    fmt: fmt,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+    }
+  }
+}
+
+class _SmsStatColumn extends StatelessWidget {
+  final String label;
+  final int smsCount;
+  final int spent;
+  final NumberFormat fmt;
+
+  const _SmsStatColumn({
+    required this.label,
+    required this.smsCount,
+    required this.spent,
+    required this.fmt,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppTextStyles.caption),
+        const SizedBox(height: 4),
+        Text('$smsCount ta', style: AppTextStyles.title.copyWith(fontSize: 14)),
+        Text('${fmt.format(spent)} so\'m', style: AppTextStyles.caption.copyWith(fontSize: 11)),
+      ],
     );
   }
 }

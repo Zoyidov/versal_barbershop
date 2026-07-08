@@ -86,7 +86,13 @@ class _DashboardView extends StatelessWidget {
                   onDaySelected: (day) => context.read<DashboardCubit>().selectDay(day),
                 ),
                 const SizedBox(height: 8),
-                Expanded(child: _buildBody(context, state)),
+                Expanded(
+                  child: RefreshIndicator(
+                    color: AppColors.gold,
+                    onRefresh: () => context.read<DashboardCubit>().refresh(),
+                    child: _buildBody(context, state),
+                  ),
+                ),
               ],
             );
           },
@@ -153,6 +159,7 @@ class _DashboardView extends StatelessWidget {
       appointments: state.appointments,
       startHour: state.scheduleStartHour,
       endHour: state.scheduleEndHour,
+      day: state.selectedDay,
       onTapAppointment: (appointment) =>
           _openForm(context, state.selectedDay, existing: appointment),
       onQuickCancel: (appointment) => _confirmCancel(context, appointment),

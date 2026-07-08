@@ -47,7 +47,19 @@ class DashboardCubit extends Cubit<DashboardState> {
     _subscribeToDay(day);
   }
 
-  void _subscribeToDay(DateTime day) {
+  /// Re-establishes the appointments listener for the currently selected
+  /// day. The data itself is already real-time (Firestore pushes updates
+  /// as they happen), so this exists for the pull-to-refresh gesture: it
+  /// gives the user a way to force a fresh round-trip to the server (handy
+  /// after e.g. a flaky connection) and returns once the next snapshot (or
+  /// an error) comes back, which is what [RefreshIndicator] awaits.
+  Future<void> refresh() {
+    final completer = Completer<void>();
+    _subscribeToDay(state.selectedDay, completer: completer);
+    return completer.future;
+  }
+
+  void _subscribeToDay(DateTime day, {Completer<void>? completer}) {
     _subscription?.cancel();
     _subscription = _watchAppointmentsForDayUseCase(day).listen(
       (appointments) {
@@ -56,10 +68,12 @@ class DashboardCubit extends Cubit<DashboardState> {
           appointments: appointments,
           clearError: true,
         ));
+        if (completer != null && !completer.isCompleted) completer.complete();
       },
       onError: (error) {
         final message = error is AppException ? error.message : 'Uchrashuvlarni yuklab bo\'lmadi.';
         emit(state.copyWith(status: DashboardStatus.error, errorMessage: message));
+        if (completer != null && !completer.isCompleted) completer.complete();
       },
     );
   }

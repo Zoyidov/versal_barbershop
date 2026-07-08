@@ -35,6 +35,7 @@ import '../../features/statistics/presentation/cubit/statistics_cubit.dart';
 import '../../features/settings/data/datasources/settings_remote_data_source.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
+import '../../features/settings/domain/usecases/get_sms_balance_usecase.dart';
 import '../../features/settings/domain/usecases/update_reminder_window_usecase.dart';
 import '../../features/settings/domain/usecases/update_schedule_hours_usecase.dart';
 import '../../features/settings/domain/usecases/watch_settings_usecase.dart';
@@ -119,7 +120,7 @@ Future<void> initDependencies() async {
 
   // ---- Settings feature ----
   sl.registerLazySingleton<SettingsRemoteDataSource>(
-    () => SettingsRemoteDataSourceImpl(firestore: sl()),
+    () => SettingsRemoteDataSourceImpl(firestore: sl(), functions: sl()),
   );
   sl.registerLazySingleton<SettingsRepository>(
     () => SettingsRepositoryImpl(remoteDataSource: sl()),
@@ -127,11 +128,13 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => WatchSettingsUseCase(sl()));
   sl.registerLazySingleton(() => UpdateReminderWindowUseCase(sl()));
   sl.registerLazySingleton(() => UpdateScheduleHoursUseCase(sl()));
+  sl.registerLazySingleton(() => GetSmsBalanceUseCase(sl()));
   sl.registerFactory(
     () => SettingsCubit(
       watchSettingsUseCase: sl(),
       updateReminderWindowUseCase: sl(),
       updateScheduleHoursUseCase: sl(),
+      getSmsBalanceUseCase: sl(),
     ),
   );
 }

@@ -7,6 +7,8 @@ enum SettingsStatus { loading, loaded, error }
 /// generic (and potentially mismatched) message.
 enum SettingsSaveTarget { reminderWindow, scheduleHours }
 
+enum SmsBalanceStatus { idle, loading, loaded, error }
+
 class SettingsState extends Equatable {
   final SettingsStatus status;
   final AppSettings settings;
@@ -14,6 +16,9 @@ class SettingsState extends Equatable {
   final String? errorMessage;
   final bool saved;
   final SettingsSaveTarget? savedTarget;
+  final SmsBalanceStatus smsBalanceStatus;
+  final SmsBalance? smsBalance;
+  final String? smsBalanceError;
 
   const SettingsState({
     this.status = SettingsStatus.loading,
@@ -22,6 +27,9 @@ class SettingsState extends Equatable {
     this.errorMessage,
     this.saved = false,
     this.savedTarget,
+    this.smsBalanceStatus = SmsBalanceStatus.idle,
+    this.smsBalance,
+    this.smsBalanceError,
   });
 
   SettingsState copyWith({
@@ -32,6 +40,10 @@ class SettingsState extends Equatable {
     bool clearError = false,
     bool? saved,
     SettingsSaveTarget? savedTarget,
+    SmsBalanceStatus? smsBalanceStatus,
+    SmsBalance? smsBalance,
+    String? smsBalanceError,
+    bool clearSmsBalanceError = false,
   }) {
     return SettingsState(
       status: status ?? this.status,
@@ -40,9 +52,22 @@ class SettingsState extends Equatable {
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       saved: saved ?? false,
       savedTarget: saved == true ? savedTarget : null,
+      smsBalanceStatus: smsBalanceStatus ?? this.smsBalanceStatus,
+      smsBalance: smsBalance ?? this.smsBalance,
+      smsBalanceError: clearSmsBalanceError ? null : (smsBalanceError ?? this.smsBalanceError),
     );
   }
 
   @override
-  List<Object?> get props => [status, settings, saving, errorMessage, saved, savedTarget];
+  List<Object?> get props => [
+        status,
+        settings,
+        saving,
+        errorMessage,
+        saved,
+        savedTarget,
+        smsBalanceStatus,
+        smsBalance,
+        smsBalanceError,
+      ];
 }
