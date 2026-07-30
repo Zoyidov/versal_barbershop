@@ -85,7 +85,7 @@ export async function cancelReminderTask(taskName: string | null | undefined): P
   } catch (error) {
     const code = (error as { code?: number }).code;
     if (code === 5) return; // NOT_FOUND - already fired or already cancelled.
-    logger.error('Failed to cancel reminder task', { taskName, message: errorMessage(error), error });
+    logger.error('Failed to cancel reminder task', { taskName, reason: errorMessage(error) });
     throw error;
   }
 }

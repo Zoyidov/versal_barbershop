@@ -65,5 +65,18 @@ class UserFields {
   static const String name = 'name';
   static const String role = 'role';
   static const String active = 'active';
+  static const String approved = 'approved';
+  static const String smsLimit = 'smsLimit';
+  static const String scheduleStartHour = 'scheduleStartHour';
+  static const String scheduleEndHour = 'scheduleEndHour';
+  static const String fcmTokens = 'fcmTokens';
   static const String createdAt = 'createdAt';
+}
+
+/// Well-known values for [UserFields.role].
+class UserRoles {
+  UserRoles._();
+
+  static const String admin = 'admin';
+  static const String barber = 'barber';
 }

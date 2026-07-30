@@ -17,6 +17,14 @@
         { "fieldPath": "sendSms", "order": "ASCENDING" },
         { "fieldPath": "appointmentTime", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "appointments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "barberId", "order": "ASCENDING" },
+        { "fieldPath": "appointmentTime", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

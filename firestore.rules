@@ -7,17 +7,57 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // True only for the signed-in caller's own `users/{uid}.role == 'admin'`.
+    // Used to give admins (and only admins) cross-barber read access below;
+    // every *write* to `users` still goes exclusively through Admin-SDK
+    // callables (`approveBarber`/`setSmsLimit`/`setUserActive`), never
+    // straight from the client, regardless of role.
+    function isAdmin() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     // `users` (barber accounts, including password hashes). Credential
-    // *verification* always goes through the `loginWithPhonePassword`
-    // callable (Admin SDK, bypasses these rules) - it never trusts a
-    // client-side read. A signed-in barber may read their OWN profile
-    // document only, which is what the app uses post-login to restore
-    // name/role on relaunch; seeing your own password hash isn't a
-    // security issue since you already know your own password, and no
-    // one can read another barber's document.
+    // *verification* always goes through the `loginWithPhonePassword`/
+    // `registerBarber` callables (Admin SDK, bypasses these rules) - it
+    // never trusts a client-side read. A signed-in barber may read their
+    // OWN profile document, which is what the app uses post-login to
+    // restore name/role/approved/smsLimit on relaunch; seeing your own
+    // password hash isn't a security issue since you already know your own
+    // password. Admins may additionally read every profile, needed for the
+    // pending-registration/SMS-limit management screen.
     match /users/{uid} {
-      allow read: if isSignedIn() && request.auth.uid == uid;
-      allow write: if false;
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+
+      // The only client-writable fields on `users` are a barber's own
+      // working hours and their own FCM device tokens - everything else
+      // (password, role, approved, smsLimit, active) still only ever
+      // changes through the Admin-SDK callables above. A barber may set
+      // their own hours or tokens; an admin may set any barber's hours
+      // (e.g. from the user-management screen), but never plant a token
+      // on someone else's account. Each field group is only validated
+      // when it's actually part of THIS write's diff, so e.g. registering
+      // a device token doesn't also require schedule hours to already
+      // be set.
+      allow update: if isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['scheduleStartHour', 'scheduleEndHour', 'fcmTokens'])
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['scheduleStartHour', 'scheduleEndHour'])
+          || (
+            (request.auth.uid == uid || isAdmin())
+            && request.resource.data.scheduleStartHour is int
+            && request.resource.data.scheduleEndHour is int
+            && request.resource.data.scheduleStartHour >= 0
+            && request.resource.data.scheduleEndHour <= 24
+            && request.resource.data.scheduleStartHour < request.resource.data.scheduleEndHour
+          )
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['fcmTokens'])
+          || (request.auth.uid == uid && request.resource.data.fcmTokens is list)
+        );
+
+      allow create, delete: if false;
     }
 
     // `clients/{phoneNumber}` lifetime aggregates: read-only from the app
@@ -29,9 +69,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // `appointments/{appointmentId}`.
+    // `appointments/{appointmentId}`. Each barber only ever sees their own
+    // bookings; admins can additionally read every barber's, for the
+    // cross-barber view in the admin screen.
     match /appointments/{appointmentId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() && (resource.data.barberId == request.auth.uid || isAdmin());
 
       allow create: if isSignedIn()
         && request.resource.data.clientPhone is string
@@ -41,7 +83,11 @@ service cloud.firestore {
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.status == 'scheduled'
         && request.resource.data.sendSms is bool
-        && request.resource.data.smsSent == false;
+        && request.resource.data.smsSent == false
+        // A barber out of SMS credit cannot take on new clients until an
+        // admin tops them up; admins are unmetered (mirrors reserveSmsCredit
+        // in smsReminderTask.ts, which likewise never meters role 'admin').
+        && (isAdmin() || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.smsLimit > 0);
 
       // Edits may only touch client-facing fields. Anything the backend
       // owns (smsSent/smsStatus/reminderTaskName/createdAt/createdBy/

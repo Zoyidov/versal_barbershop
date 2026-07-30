@@ -11,18 +11,20 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
       : _remoteDataSource = remoteDataSource;
 
   @override
-  Stream<List<ClientStat>> watchClientStats() => _remoteDataSource.watchClientStats();
+  Stream<List<ClientStat>> watchClientStats({String? barberId}) =>
+      _remoteDataSource.watchClientStats(barberId: barberId);
 
   @override
-  Future<List<MonthlyStat>> getClientMonthlyBreakdown(String phoneNumber) {
-    return _remoteDataSource.getClientMonthlyBreakdown(phoneNumber);
+  Future<List<MonthlyStat>> getClientMonthlyBreakdown(String phoneNumber, {String? barberId}) {
+    return _remoteDataSource.getClientMonthlyBreakdown(phoneNumber, barberId: barberId);
   }
 
   @override
-  Future<List<ClientVisit>> getClientVisits(String phoneNumber) {
-    return _remoteDataSource.getClientVisits(phoneNumber);
+  Future<List<ClientVisit>> getClientVisits(String phoneNumber, {String? barberId}) {
+    return _remoteDataSource.getClientVisits(phoneNumber, barberId: barberId);
   }
 
   @override
-  Future<List<ClientStat>> searchClients(String query) => _remoteDataSource.searchClients(query);
+  Future<List<ClientStat>> searchClients(String query, {String? barberId}) =>
+      _remoteDataSource.searchClients(query, barberId: barberId);
 }

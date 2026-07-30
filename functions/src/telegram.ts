@@ -47,7 +47,7 @@ export async function notifyAdmins(text: string): Promise<void> {
           logger.error('Telegram xabari yuborilmadi', { chatId, status: response.status, body: await response.text() });
         }
       } catch (error) {
-        logger.error('Telegram xabarini yuborishda xatolik', { chatId, message: errorMessage(error), error });
+        logger.error('Telegram xabarini yuborishda xatolik', { chatId, reason: errorMessage(error) });
       }
     }),
   );

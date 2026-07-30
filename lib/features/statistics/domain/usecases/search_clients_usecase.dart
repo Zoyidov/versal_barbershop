@@ -6,5 +6,6 @@ class SearchClientsUseCase {
 
   SearchClientsUseCase(this._repository);
 
-  Future<List<ClientStat>> call(String query) => _repository.searchClients(query);
+  Future<List<ClientStat>> call(String query, {String? barberId}) =>
+      _repository.searchClients(query, barberId: barberId);
 }

@@ -20,12 +20,12 @@ class ClientDetailCubit extends Cubit<ClientDetailState> {
         _getClientVisitsUseCase = getClientVisitsUseCase,
         super(const ClientDetailState());
 
-  Future<void> load(String phoneNumber) async {
+  Future<void> load(String phoneNumber, {String? barberId}) async {
     emit(state.copyWith(status: ClientDetailStatus.loading));
     try {
       final results = await Future.wait([
-        _getClientMonthlyBreakdownUseCase(phoneNumber),
-        _getClientVisitsUseCase(phoneNumber),
+        _getClientMonthlyBreakdownUseCase(phoneNumber, barberId: barberId),
+        _getClientVisitsUseCase(phoneNumber, barberId: barberId),
       ]);
       emit(state.copyWith(
         status: ClientDetailStatus.loaded,

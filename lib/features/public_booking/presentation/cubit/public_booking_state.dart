@@ -4,6 +4,9 @@ enum PublicBookingStatus { loading, loaded, error }
 
 class PublicBookingState extends Equatable {
   final PublicBookingStatus status;
+  final List<PublicBarber> barbers;
+  final bool barbersLoading;
+  final String? selectedBarberId;
   final DateTime selectedDay;
   final DaySlots daySlots;
   final bool isSubmitting;
@@ -11,6 +14,9 @@ class PublicBookingState extends Equatable {
 
   PublicBookingState({
     this.status = PublicBookingStatus.loading,
+    this.barbers = const [],
+    this.barbersLoading = true,
+    this.selectedBarberId,
     DateTime? selectedDay,
     this.daySlots = DaySlots.empty,
     this.isSubmitting = false,
@@ -19,6 +25,9 @@ class PublicBookingState extends Equatable {
 
   PublicBookingState copyWith({
     PublicBookingStatus? status,
+    List<PublicBarber>? barbers,
+    bool? barbersLoading,
+    String? selectedBarberId,
     DateTime? selectedDay,
     DaySlots? daySlots,
     bool? isSubmitting,
@@ -26,6 +35,9 @@ class PublicBookingState extends Equatable {
   }) {
     return PublicBookingState(
       status: status ?? this.status,
+      barbers: barbers ?? this.barbers,
+      barbersLoading: barbersLoading ?? this.barbersLoading,
+      selectedBarberId: selectedBarberId ?? this.selectedBarberId,
       selectedDay: selectedDay ?? this.selectedDay,
       daySlots: daySlots ?? this.daySlots,
       isSubmitting: isSubmitting ?? this.isSubmitting,
@@ -34,5 +46,14 @@ class PublicBookingState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [status, selectedDay, daySlots, isSubmitting, errorMessage];
+  List<Object?> get props => [
+        status,
+        barbers,
+        barbersLoading,
+        selectedBarberId,
+        selectedDay,
+        daySlots,
+        isSubmitting,
+        errorMessage,
+      ];
 }

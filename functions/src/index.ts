@@ -6,9 +6,9 @@ import { initializeApp } from 'firebase-admin/app';
 // which is after this call.
 initializeApp();
 
-export { loginWithPhonePassword } from './auth';
+export { loginWithPhonePassword, registerBarber, approveBarber, setSmsLimit, setUserActive } from './auth';
 export { onAppointmentCreated, onAppointmentUpdated } from './appointmentTriggers';
 export { onGlobalSettingsUpdated } from './settingsTriggers';
 export { sendSmsReminderTask } from './smsReminderTask';
 export { getSmsBalance } from './smsBalance';
-export { getPublicDaySlots, createPublicBooking } from './publicBooking';
+export { getPublicDaySlots, createPublicBooking, getPublicBarbers } from './publicBooking';

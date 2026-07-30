@@ -1,13 +1,41 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
-import { Timestamp, getFirestore } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp, getFirestore } from 'firebase-admin/firestore';
 import { REGION } from './config';
 import { taskSecret } from './taskQueue';
 import { devsmsSmsTemplate, sendReminderSms } from './smsGateway';
-import type { AppointmentDoc } from './types';
+import type { AppointmentDoc, UserDoc } from './types';
 import { errorMessage } from './util';
 
 const db = getFirestore();
+
+/**
+ * Reserves one SMS credit off `users/{barberId}.smsLimit` before actually
+ * sending, so two reminders firing at once can't both pass a stale check.
+ * `role === 'admin'` accounts are unmetered - reserving there is a no-op.
+ * Returns `false` (and reserves nothing) when the barber is out of credit.
+ */
+async function reserveSmsCredit(barberId: string): Promise<boolean> {
+  const barberRef = db.collection('users').doc(barberId);
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(barberRef);
+    const barber = snap.data() as UserDoc | undefined;
+    if (!barber || barber.role === 'admin') return true;
+    if ((barber.smsLimit ?? 0) <= 0) return false;
+    tx.update(barberRef, { smsLimit: FieldValue.increment(-1) });
+    return true;
+  });
+}
+
+/** Returns a reserved credit after a send attempt fails, so a delivery
+ * failure never permanently costs the barber a credit. */
+async function refundSmsCredit(barberId: string): Promise<void> {
+  const barberRef = db.collection('users').doc(barberId);
+  const snap = await barberRef.get();
+  const barber = snap.data() as UserDoc | undefined;
+  if (!barber || barber.role === 'admin') return;
+  await barberRef.update({ smsLimit: FieldValue.increment(1) });
+}
 
 /**
  * Fills in `{time}` in the template configured in `functions/.env`
@@ -77,6 +105,13 @@ export const sendSmsReminderTask = onRequest(
       return;
     }
 
+    const hasCredit = await reserveSmsCredit(appointment.barberId);
+    if (!hasCredit) {
+      await ref.update({ smsStatus: 'limit_exceeded', reminderTaskName: null });
+      res.status(200).send('Barber has no SMS credit left, skipping.');
+      return;
+    }
+
     try {
       await sendReminderSms(appointment.clientPhone, buildReminderMessage(appointment));
       await ref.update({
@@ -87,7 +122,12 @@ export const sendSmsReminderTask = onRequest(
       });
       res.status(200).send('SMS sent.');
     } catch (error) {
-      logger.error('Failed to send SMS reminder', { appointmentId, message: errorMessage(error), error });
+      // Cloud Functions' logger treats a `message` key in the metadata
+      // object as reserved (it silently overwrites it with the logger
+      // call's own stack trace), so the real reason must go under a
+      // different key - `reason` - or it's lost from Cloud Logging entirely.
+      logger.error('Failed to send SMS reminder', { appointmentId, reason: errorMessage(error) });
+      await refundSmsCredit(appointment.barberId);
       await ref.update({ smsStatus: 'failed', reminderTaskName: null });
       // Non-2xx tells Cloud Tasks to retry according to the queue's retry
       // policy instead of silently swallowing a failed delivery.

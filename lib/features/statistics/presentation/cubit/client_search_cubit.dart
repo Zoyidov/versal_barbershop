@@ -14,10 +14,17 @@ part 'client_search_state.dart';
 /// Firestore, so every keystroke doesn't fire its own query.
 class ClientSearchCubit extends Cubit<ClientSearchState> {
   final SearchClientsUseCase _searchClientsUseCase;
+
+  /// The signed-in barber's own uid, or null for an admin (searches every
+  /// barber's clients) - fixed for the lifetime of this cubit, since the
+  /// nav-bar search has no barber picker.
+  final String? _barberId;
+
   Timer? _debounce;
 
-  ClientSearchCubit({required SearchClientsUseCase searchClientsUseCase})
+  ClientSearchCubit({required SearchClientsUseCase searchClientsUseCase, String? barberId})
       : _searchClientsUseCase = searchClientsUseCase,
+        _barberId = barberId,
         super(const ClientSearchState());
 
   void onQueryChanged(String query) {
@@ -35,7 +42,7 @@ class ClientSearchCubit extends Cubit<ClientSearchState> {
 
   Future<void> _search(String query) async {
     try {
-      final results = await _searchClientsUseCase(query);
+      final results = await _searchClientsUseCase(query, barberId: _barberId);
       if (isClosed || state.query != query) return;
       emit(state.copyWith(status: ClientSearchStatus.loaded, results: results));
     } on AppException catch (e) {

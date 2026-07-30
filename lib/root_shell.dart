@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/theme/app_colors.dart';
 import 'core/widgets/custom_bottom_nav_bar.dart';
 import 'core/widgets/gradient_background.dart';
 import 'features/appointments/presentation/pages/dashboard_page.dart';
+import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/settings/presentation/pages/settings_page.dart';
 import 'features/statistics/presentation/pages/client_search_page.dart';
 import 'features/statistics/presentation/pages/statistics_page.dart';
@@ -49,8 +51,10 @@ class _RootShellState extends State<RootShell> {
         items: _items,
         onTap: (index) => setState(() => _index = index),
         onSearchTap: () {
+          final barber = context.read<AuthCubit>().state.barber;
+          final searchBarberId = barber?.isAdmin == true ? null : barber?.uid;
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ClientSearchPage()),
+            MaterialPageRoute(builder: (_) => ClientSearchPage(barberId: searchBarberId)),
           );
         },
       ),

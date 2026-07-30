@@ -79,6 +79,8 @@ class _PublicBookingView extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  _buildBarberPicker(context, state),
+                  const SizedBox(height: 8),
                   WeekCalendarStrip(
                     selectedDay: state.selectedDay,
                     onDaySelected: (day) => context.read<PublicBookingCubit>().selectDay(day),
@@ -94,7 +96,50 @@ class _PublicBookingView extends StatelessWidget {
     );
   }
 
+  Widget _buildBarberPicker(BuildContext context, PublicBookingState state) {
+    if (state.barbersLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: Center(
+          child: SizedBox(
+            height: 18,
+            width: 18,
+            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.gold),
+          ),
+        ),
+      );
+    }
+    if (state.barbers.isEmpty) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: state.barbers.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final barber = state.barbers[index];
+          final selected = barber.uid == state.selectedBarberId;
+          return ChoiceChip(
+            label: Text(barber.name),
+            selected: selected,
+            selectedColor: AppColors.gold,
+            backgroundColor: AppColors.surface,
+            labelStyle: TextStyle(color: selected ? AppColors.background : AppColors.textPrimary),
+            onSelected: (_) {
+              if (!selected) context.read<PublicBookingCubit>().selectBarber(barber.uid);
+            },
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildBody(BuildContext context, PublicBookingState state) {
+    if (state.barbersLoading) {
+      return const Center(child: CircularProgressIndicator(color: AppColors.gold));
+    }
     if (state.status == PublicBookingStatus.loading) {
       return const Center(child: CircularProgressIndicator(color: AppColors.gold));
     }

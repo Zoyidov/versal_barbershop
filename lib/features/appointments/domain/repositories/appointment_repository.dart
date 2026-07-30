@@ -3,8 +3,10 @@ import '../entities/client_history.dart';
 
 abstract class AppointmentRepository {
   /// Real-time stream of every appointment (any status) scheduled on the
-  /// given calendar day, ordered by time of day.
-  Stream<List<Appointment>> watchAppointmentsForDay(DateTime day);
+  /// given calendar day, ordered by time of day. [barberId] null means
+  /// "every barber" - only an admin's read actually resolves that way,
+  /// per firestore.rules.
+  Stream<List<Appointment>> watchAppointmentsForDay(DateTime day, {String? barberId});
 
   Future<Appointment> createAppointment(Appointment appointment);
 

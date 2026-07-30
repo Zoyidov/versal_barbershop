@@ -14,12 +14,17 @@ import '../widgets/visit_history_row.dart';
 class ClientDetailPage extends StatelessWidget {
   final ClientStat client;
 
-  const ClientDetailPage({super.key, required this.client});
+  /// Same barber scope the list this client was tapped from used, so the
+  /// detail screen never leaks another barber's history for this phone
+  /// number into a regular barber's view.
+  final String? barberId;
+
+  const ClientDetailPage({super.key, required this.client, this.barberId});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<ClientDetailCubit>()..load(client.phoneNumber),
+      create: (_) => sl<ClientDetailCubit>()..load(client.phoneNumber, barberId: barberId),
       child: Scaffold(
         body: GradientBackground(
           child: SafeArea(

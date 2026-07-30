@@ -14,6 +14,11 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Barber> register({required String phoneNumber, required String password, required String name}) {
+    return _remoteDataSource.register(phoneNumber: phoneNumber, password: password, name: name);
+  }
+
+  @override
   Future<void> logout() => _remoteDataSource.logout();
 
   @override
@@ -21,4 +26,12 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Barber?> getCurrentBarber() => _remoteDataSource.getCurrentBarber();
+
+  @override
+  Future<void> updateScheduleHours({required String uid, required int startHour, required int endHour}) {
+    return _remoteDataSource.updateScheduleHours(uid: uid, startHour: startHour, endHour: endHour);
+  }
+
+  @override
+  Stream<Barber?> watchBarberProfile(String uid) => _remoteDataSource.watchBarberProfile(uid);
 }

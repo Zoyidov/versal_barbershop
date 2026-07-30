@@ -2,12 +2,15 @@ import 'package:cloud_functions/cloud_functions.dart';
 
 import '../../../../core/error/app_exception.dart';
 import '../../domain/entities/day_slots.dart';
+import '../../domain/entities/public_barber.dart';
 
 abstract class PublicBookingRemoteDataSource {
-  Future<DaySlots> getDaySlots(DateTime day);
+  Future<List<PublicBarber>> getBarbers();
+  Future<DaySlots> getDaySlots(DateTime day, {required String barberId});
   Future<void> createBooking({
     required DateTime day,
     required int hour,
+    required String barberId,
     required String clientName,
     required String clientPhone,
   });
@@ -25,13 +28,30 @@ class PublicBookingRemoteDataSourceImpl implements PublicBookingRemoteDataSource
   PublicBookingRemoteDataSourceImpl({required FirebaseFunctions functions}) : _functions = functions;
 
   @override
-  Future<DaySlots> getDaySlots(DateTime day) async {
+  Future<List<PublicBarber>> getBarbers() async {
+    try {
+      final callable = _functions.httpsCallable('getPublicBarbers');
+      final result = await callable.call<Map<String, dynamic>>();
+      final rawBarbers = (result.data['barbers'] as List).cast<Map<dynamic, dynamic>>();
+      return rawBarbers
+          .map((b) => PublicBarber(uid: b['uid'] as String, name: b['name'] as String? ?? ''))
+          .toList();
+    } on FirebaseFunctionsException catch (e) {
+      throw AppException(e.message ?? 'Sartaroshlar ro\'yxatini yuklab bo\'lmadi.');
+    } catch (e) {
+      throw AppException('Sartaroshlar ro\'yxatini yuklab bo\'lmadi: $e');
+    }
+  }
+
+  @override
+  Future<DaySlots> getDaySlots(DateTime day, {required String barberId}) async {
     try {
       final callable = _functions.httpsCallable('getPublicDaySlots');
       final result = await callable.call<Map<String, dynamic>>({
         'year': day.year,
         'month': day.month,
         'day': day.day,
+        'barberId': barberId,
       });
       final data = result.data;
       final rawSlots = (data['slots'] as List).cast<Map<dynamic, dynamic>>();
@@ -57,6 +77,7 @@ class PublicBookingRemoteDataSourceImpl implements PublicBookingRemoteDataSource
   Future<void> createBooking({
     required DateTime day,
     required int hour,
+    required String barberId,
     required String clientName,
     required String clientPhone,
   }) async {
@@ -67,6 +88,7 @@ class PublicBookingRemoteDataSourceImpl implements PublicBookingRemoteDataSource
         'month': day.month,
         'day': day.day,
         'hour': hour,
+        'barberId': barberId,
         'clientName': clientName,
         'clientPhone': clientPhone,
       });

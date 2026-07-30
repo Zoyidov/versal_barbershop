@@ -6,5 +6,6 @@ class GetClientMonthlyBreakdownUseCase {
 
   GetClientMonthlyBreakdownUseCase(this._repository);
 
-  Future<List<MonthlyStat>> call(String phoneNumber) => _repository.getClientMonthlyBreakdown(phoneNumber);
+  Future<List<MonthlyStat>> call(String phoneNumber, {String? barberId}) =>
+      _repository.getClientMonthlyBreakdown(phoneNumber, barberId: barberId);
 }

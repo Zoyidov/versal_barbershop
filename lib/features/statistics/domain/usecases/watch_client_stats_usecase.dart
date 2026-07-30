@@ -6,5 +6,5 @@ class WatchClientStatsUseCase {
 
   WatchClientStatsUseCase(this._repository);
 
-  Stream<List<ClientStat>> call() => _repository.watchClientStats();
+  Stream<List<ClientStat>> call({String? barberId}) => _repository.watchClientStats(barberId: barberId);
 }

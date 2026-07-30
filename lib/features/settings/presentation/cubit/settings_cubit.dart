@@ -37,7 +37,9 @@ class SettingsCubit extends Cubit<SettingsState> {
         emit(state.copyWith(status: SettingsStatus.error, errorMessage: message));
       },
     );
-    loadSmsBalance();
+    // Not auto-loaded here: the shop's shared SMS balance is admin-only
+    // (see getSmsBalance in functions/src/smsBalance.ts), so the page only
+    // calls this when it knows the signed-in user is an admin.
   }
 
   Future<void> loadSmsBalance() async {

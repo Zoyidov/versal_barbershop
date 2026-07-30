@@ -6,5 +6,6 @@ class GetClientVisitsUseCase {
 
   GetClientVisitsUseCase(this._repository);
 
-  Future<List<ClientVisit>> call(String phoneNumber) => _repository.getClientVisits(phoneNumber);
+  Future<List<ClientVisit>> call(String phoneNumber, {String? barberId}) =>
+      _repository.getClientVisits(phoneNumber, barberId: barberId);
 }

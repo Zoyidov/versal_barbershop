@@ -6,5 +6,6 @@ class GetPublicDaySlotsUseCase {
 
   GetPublicDaySlotsUseCase(this._repository);
 
-  Future<DaySlots> call(DateTime day) => _repository.getDaySlots(day);
+  Future<DaySlots> call(DateTime day, {required String barberId}) =>
+      _repository.getDaySlots(day, barberId: barberId);
 }

@@ -11,8 +11,8 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
       : _remoteDataSource = remoteDataSource;
 
   @override
-  Stream<List<Appointment>> watchAppointmentsForDay(DateTime day) {
-    return _remoteDataSource.watchAppointmentsForDay(day);
+  Stream<List<Appointment>> watchAppointmentsForDay(DateTime day, {String? barberId}) {
+    return _remoteDataSource.watchAppointmentsForDay(day, barberId: barberId);
   }
 
   @override

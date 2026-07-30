@@ -10,6 +10,7 @@ import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/gradient_background.dart';
 import '../cubit/auth_cubit.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -122,6 +123,16 @@ class _LoginPageState extends State<LoginPage> {
                               },
                             ),
                           ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const RegisterPage()),
+                        ),
+                        child: Text(
+                          'Hisobingiz yo\'qmi? Ro\'yxatdan o\'ting',
+                          style: AppTextStyles.bodyMuted.copyWith(color: AppColors.gold),
                         ),
                       ),
                     ],

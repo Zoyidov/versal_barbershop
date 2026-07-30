@@ -49,6 +49,17 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Lets a push (new booking, approval, SMS-limit update) wake the app
+	     in the background to update its badge/data even when the user
+	     hasn't tapped the notification - see PushNotificationService.
+	     Push Notifications itself is a separate Xcode "Signing &
+	     Capabilities" entitlement that still needs adding in Xcode (see
+	     the migration notes) - this key alone isn't sufficient for APNs
+	     registration to work. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

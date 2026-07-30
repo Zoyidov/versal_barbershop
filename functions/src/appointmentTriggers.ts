@@ -80,7 +80,7 @@ export const onAppointmentCreated = onDocumentCreated(
       const taskName = await scheduleReminderTask(appointmentId, scheduleTime);
       await snap.ref.update({ reminderTaskName: taskName });
     } catch (error) {
-      logger.error('Failed to schedule SMS reminder task on create', { appointmentId, message: errorMessage(error), error });
+      logger.error('Failed to schedule SMS reminder task on create', { appointmentId, reason: errorMessage(error) });
     }
   },
 );
@@ -132,7 +132,7 @@ export const onAppointmentUpdated = onDocumentUpdated(
       try {
         await cancelReminderTask(after.reminderTaskName);
       } catch (error) {
-        logger.error('Failed to cancel reminder task on cancellation', { appointmentId, message: errorMessage(error), error });
+        logger.error('Failed to cancel reminder task on cancellation', { appointmentId, reason: errorMessage(error) });
       }
       if (after.reminderTaskName) {
         await ref.update({ reminderTaskName: null });
@@ -152,7 +152,7 @@ export const onAppointmentUpdated = onDocumentUpdated(
       try {
         await cancelReminderTask(after.reminderTaskName);
       } catch (error) {
-        logger.error('Failed to cancel reminder task after SMS toggled off', { appointmentId, message: errorMessage(error), error });
+        logger.error('Failed to cancel reminder task after SMS toggled off', { appointmentId, reason: errorMessage(error) });
       }
       if (after.reminderTaskName) await ref.update({ reminderTaskName: null });
       return;
@@ -170,7 +170,7 @@ export const onAppointmentUpdated = onDocumentUpdated(
       const taskName = await scheduleReminderTask(appointmentId, scheduleTime);
       await ref.update({ reminderTaskName: taskName });
     } catch (error) {
-      logger.error('Failed to reschedule SMS reminder task', { appointmentId, message: errorMessage(error), error });
+      logger.error('Failed to reschedule SMS reminder task', { appointmentId, reason: errorMessage(error) });
     }
   },
 );

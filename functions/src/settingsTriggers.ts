@@ -50,7 +50,7 @@ export const onGlobalSettingsUpdated = onDocumentUpdated(
           const taskName = await scheduleReminderTask(doc.id, scheduleTime);
           await doc.ref.update({ reminderTaskName: taskName });
         } catch (error) {
-          logger.error('Failed to reschedule reminder after settings change', { appointmentId: doc.id, message: errorMessage(error), error });
+          logger.error('Failed to reschedule reminder after settings change', { appointmentId: doc.id, reason: errorMessage(error) });
         }
       }),
     );

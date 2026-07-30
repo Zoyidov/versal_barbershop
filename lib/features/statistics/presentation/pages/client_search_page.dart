@@ -13,19 +13,25 @@ import 'client_detail_page.dart';
 /// phone number or client name, sees matching clients in real time, taps
 /// through to their existing statistics/history page.
 class ClientSearchPage extends StatelessWidget {
-  const ClientSearchPage({super.key});
+  /// The signed-in barber's own uid, or null for an admin (searches every
+  /// barber's clients) - each barber only ever searches their own.
+  final String? barberId;
+
+  const ClientSearchPage({super.key, this.barberId});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<ClientSearchCubit>(),
-      child: const _ClientSearchView(),
+      create: (_) => sl<ClientSearchCubit>(param1: barberId),
+      child: _ClientSearchView(barberId: barberId),
     );
   }
 }
 
 class _ClientSearchView extends StatefulWidget {
-  const _ClientSearchView();
+  final String? barberId;
+
+  const _ClientSearchView({this.barberId});
 
   @override
   State<_ClientSearchView> createState() => _ClientSearchViewState();
@@ -159,7 +165,9 @@ class _ClientSearchViewState extends State<_ClientSearchView> {
                           stat: client,
                           onTap: () {
                             Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => ClientDetailPage(client: client)),
+                              MaterialPageRoute(
+                                builder: (_) => ClientDetailPage(client: client, barberId: widget.barberId),
+                              ),
                             );
                           },
                         );

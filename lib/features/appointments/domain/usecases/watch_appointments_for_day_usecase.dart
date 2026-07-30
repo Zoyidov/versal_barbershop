@@ -6,5 +6,6 @@ class WatchAppointmentsForDayUseCase {
 
   WatchAppointmentsForDayUseCase(this._repository);
 
-  Stream<List<Appointment>> call(DateTime day) => _repository.watchAppointmentsForDay(day);
+  Stream<List<Appointment>> call(DateTime day, {String? barberId}) =>
+      _repository.watchAppointmentsForDay(day, barberId: barberId);
 }

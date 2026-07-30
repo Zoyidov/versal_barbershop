@@ -7,6 +7,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/widgets/shimmer_placeholder.dart';
 import '../../../../core/widgets/week_calendar_strip.dart';
+import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../../public_booking/presentation/pages/public_booking_page.dart';
 import '../../domain/entities/appointment.dart';
 import '../cubit/dashboard_cubit.dart';
@@ -135,6 +136,29 @@ class _DashboardView extends StatelessWidget {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => AppointmentFormPage(defaultDay: day, defaultTime: time, existing: existing),
+        ),
+      );
+      return;
+    }
+
+    // A barber out of SMS credit can't take on new clients until an admin
+    // tops them up (firestore.rules enforces this server-side too - this
+    // is just the friendlier front door). Admins are never metered.
+    final barber = context.read<AuthCubit>().state.barber;
+    if (barber != null && !barber.canAddClients) {
+      showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          title: Text('SMS limiti tugagan', style: AppTextStyles.title),
+          content: Text(
+            'Yangi mijoz qo\'shish uchun SMS limitingiz yetarli emas. Iltimos, admin bilan bog\'laning.',
+            style: AppTextStyles.bodyMuted,
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Tushunarli')),
+          ],
         ),
       );
       return;

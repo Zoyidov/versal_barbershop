@@ -7,7 +7,10 @@ import '../models/appointment_model.dart';
 import '../models/client_history_model.dart';
 
 abstract class AppointmentRemoteDataSource {
-  Stream<List<AppointmentModel>> watchAppointmentsForDay(DateTime day);
+  /// [barberId] null means "every barber" (only actually returns results
+  /// for an admin caller - firestore.rules restrict a non-admin's read to
+  /// their own `barberId`).
+  Stream<List<AppointmentModel>> watchAppointmentsForDay(DateTime day, {String? barberId});
   Future<AppointmentModel> createAppointment(AppointmentModel appointment);
   Future<void> updateAppointment(AppointmentModel appointment);
   Future<void> cancelAppointment(String appointmentId);
@@ -26,16 +29,20 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       _firestore.collection(FirestorePaths.clients);
 
   @override
-  Stream<List<AppointmentModel>> watchAppointmentsForDay(DateTime day) {
+  Stream<List<AppointmentModel>> watchAppointmentsForDay(DateTime day, {String? barberId}) {
     final start = DateFormatter.startOfDay(day);
     final end = DateFormatter.endOfDay(day);
 
-    return _appointments
-        .where(
-          AppointmentFields.appointmentTime,
-          isGreaterThanOrEqualTo: Timestamp.fromDate(start),
-          isLessThanOrEqualTo: Timestamp.fromDate(end),
-        )
+    Query<Map<String, dynamic>> query = _appointments.where(
+      AppointmentFields.appointmentTime,
+      isGreaterThanOrEqualTo: Timestamp.fromDate(start),
+      isLessThanOrEqualTo: Timestamp.fromDate(end),
+    );
+    if (barberId != null) {
+      query = query.where(AppointmentFields.barberId, isEqualTo: barberId);
+    }
+
+    return query
         .orderBy(AppointmentFields.appointmentTime)
         .snapshots()
         .map((snapshot) => snapshot.docs.map(AppointmentModel.fromSnapshot).toList())
