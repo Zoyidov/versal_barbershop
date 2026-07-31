@@ -5,7 +5,7 @@ export type SmsStatus = 'sent' | 'failed' | 'limit_exceeded' | null;
 
 /** Mirrors `appointments/{id}` — keep in sync with the Dart AppointmentModel. */
 export interface AppointmentDoc {
-  clientPhone: string;
+  clientPhone: string | null;
   clientName: string | null;
   serviceType: string | null;
   barberId: string;

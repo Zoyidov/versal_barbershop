@@ -49,7 +49,7 @@ class AppointmentFormCubit extends Cubit<AppointmentFormState> {
     emit(AppointmentFormState(
       mode: AppointmentFormMode.edit,
       existing: existing,
-      phoneNumber: existing.clientPhone,
+      phoneNumber: existing.clientPhone ?? '',
       clientName: existing.clientName ?? '',
       serviceType: existing.serviceType,
       day: existing.appointmentTime,
@@ -57,7 +57,8 @@ class AppointmentFormCubit extends Cubit<AppointmentFormState> {
       sendSms: existing.sendSms,
     ));
     // Still surface prior-cancellation history for context when editing.
-    _lookupHistory(existing.clientPhone);
+    final existingPhone = existing.clientPhone;
+    if (existingPhone != null) _lookupHistory(existingPhone);
   }
 
   void onPhoneChanged(String value) {
@@ -115,9 +116,21 @@ class AppointmentFormCubit extends Cubit<AppointmentFormState> {
   void toggleSendSms(bool value) => emit(state.copyWith(sendSms: value));
 
   Future<void> submit() async {
-    final normalizedPhone = Validators.normalizePhone(state.phoneNumber);
-    if (normalizedPhone == null) {
-      emit(state.copyWith(phoneError: 'Yaroqli telefon raqami kiritilishi shart'));
+    // Phone is optional - a client can be added with just a name - but a
+    // non-empty phone field still has to be a valid number, and at least
+    // one of phone/name has to be there to identify the client by.
+    final phoneRaw = state.phoneNumber.trim();
+    String? normalizedPhone;
+    if (phoneRaw.isNotEmpty) {
+      normalizedPhone = Validators.normalizePhone(phoneRaw);
+      if (normalizedPhone == null) {
+        emit(state.copyWith(phoneError: 'Yaroqli telefon raqami kiritilishi shart'));
+        return;
+      }
+    }
+    final name = state.clientName.trim();
+    if (normalizedPhone == null && name.isEmpty) {
+      emit(state.copyWith(errorMessage: 'Ism yoki telefon raqami kiritilishi shart.'));
       return;
     }
     if (state.time == null) {
@@ -139,16 +152,20 @@ class AppointmentFormCubit extends Cubit<AppointmentFormState> {
       state.time!.minute,
     );
 
+    // Can't send a reminder with nothing to send it to.
+    final sendSms = normalizedPhone != null && state.sendSms;
+
     emit(state.copyWith(submitting: true, clearError: true));
     try {
-      final name = state.clientName.trim();
       if (state.isEditing) {
         final updated = state.existing!.copyWith(
           clientPhone: normalizedPhone,
+          clearClientPhone: normalizedPhone == null,
           clientName: name.isEmpty ? null : name,
+          clearClientName: name.isEmpty,
           serviceType: state.serviceType,
           appointmentTime: appointmentTime,
-          sendSms: state.sendSms,
+          sendSms: sendSms,
         );
         await _updateAppointmentUseCase(updated);
       } else {
@@ -158,14 +175,19 @@ class AppointmentFormCubit extends Cubit<AppointmentFormState> {
           serviceType: state.serviceType,
           barberId: barberId,
           appointmentTime: appointmentTime,
-          sendSms: state.sendSms,
+          sendSms: sendSms,
           createdAt: DateTime.now(),
         );
         await _createAppointmentUseCase(appointment);
       }
       emit(state.copyWith(submitting: false, saved: true));
     } on AppException catch (e) {
+      debugPrint('[AppointmentFormCubit] submit() failed with AppException: ${e.message}');
       emit(state.copyWith(submitting: false, errorMessage: e.message));
+    } catch (e, stackTrace) {
+      debugPrint('[AppointmentFormCubit] submit() failed with unexpected error: $e');
+      debugPrint('$stackTrace');
+      emit(state.copyWith(submitting: false, errorMessage: 'Xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.'));
     }
   }
 

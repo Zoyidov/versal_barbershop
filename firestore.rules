@@ -76,8 +76,15 @@ service cloud.firestore {
       allow read: if isSignedIn() && (resource.data.barberId == request.auth.uid || isAdmin());
 
       allow create: if isSignedIn()
-        && request.resource.data.clientPhone is string
-        && request.resource.data.clientPhone.size() > 0
+        // Phone is optional - a client can be added with just a name - but
+        // when given it must be non-empty, and when it's absent there must
+        // be a name to identify the client by instead, and no SMS can be
+        // sent (there's no number to send it to).
+        && (request.resource.data.clientPhone == null
+            || (request.resource.data.clientPhone is string && request.resource.data.clientPhone.size() > 0))
+        && (request.resource.data.clientPhone != null
+            || (request.resource.data.clientName is string && request.resource.data.clientName.size() > 0))
+        && (request.resource.data.clientPhone != null || request.resource.data.sendSms == false)
         && request.resource.data.appointmentTime is timestamp
         && request.resource.data.barberId == request.auth.uid
         && request.resource.data.createdBy == request.auth.uid
@@ -95,6 +102,11 @@ service cloud.firestore {
       // or buggy client from ever marking its own reminder "sent" or
       // reassigning ownership of a booking.
       allow update: if isSignedIn()
+        && (request.resource.data.clientPhone == null
+            || (request.resource.data.clientPhone is string && request.resource.data.clientPhone.size() > 0))
+        && (request.resource.data.clientPhone != null
+            || (request.resource.data.clientName is string && request.resource.data.clientName.size() > 0))
+        && (request.resource.data.clientPhone != null || request.resource.data.sendSms == false)
         && request.resource.data.barberId == resource.data.barberId
         && request.resource.data.createdBy == resource.data.createdBy
         && request.resource.data.createdAt == resource.data.createdAt

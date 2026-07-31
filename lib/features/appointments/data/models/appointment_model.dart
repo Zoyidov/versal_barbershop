@@ -6,7 +6,7 @@ import '../../domain/entities/appointment.dart';
 class AppointmentModel extends Appointment {
   const AppointmentModel({
     super.id,
-    required super.clientPhone,
+    super.clientPhone,
     super.clientName,
     super.serviceType,
     required super.barberId,
@@ -40,7 +40,7 @@ class AppointmentModel extends Appointment {
     final json = doc.data()!;
     return AppointmentModel(
       id: doc.id,
-      clientPhone: json[AppointmentFields.clientPhone] as String? ?? '',
+      clientPhone: json[AppointmentFields.clientPhone] as String?,
       clientName: json[AppointmentFields.clientName] as String?,
       serviceType: json[AppointmentFields.serviceType] as String?,
       barberId: json[AppointmentFields.barberId] as String? ?? '',

@@ -52,7 +52,7 @@ class AppointmentCard extends StatelessWidget {
                         child: Text(
                           appointment.clientName?.trim().isNotEmpty == true
                               ? appointment.clientName!
-                              : appointment.clientPhone,
+                              : (appointment.clientPhone ?? 'Mijoz'),
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.title.copyWith(
                             fontSize: 14.5,
@@ -84,13 +84,14 @@ class AppointmentCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      Flexible(
-                        child: Text(
-                          appointment.clientPhone,
-                          style: AppTextStyles.caption.copyWith(fontSize: 11.5),
-                          overflow: TextOverflow.ellipsis,
+                      if (appointment.clientPhone != null)
+                        Flexible(
+                          child: Text(
+                            appointment.clientPhone!,
+                            style: AppTextStyles.caption.copyWith(fontSize: 11.5),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
                       if (appointment.serviceType != null) ...[
                         Text(' · ', style: AppTextStyles.caption.copyWith(fontSize: 11.5)),
                         Flexible(

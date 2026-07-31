@@ -4,6 +4,7 @@ import { FieldValue, Timestamp, getFirestore } from 'firebase-admin/firestore';
 import { REGION } from './config';
 import { taskSecret } from './taskQueue';
 import { devsmsSmsTemplate, sendReminderSms } from './smsGateway';
+import { sendPushToUser } from './notifications';
 import type { AppointmentDoc, UserDoc } from './types';
 import { errorMessage } from './util';
 
@@ -100,7 +101,15 @@ export const sendSmsReminderTask = onRequest(
 
     // Re-validate at send time: the appointment may have been cancelled,
     // rescheduled, or had SMS turned off since this task was enqueued.
-    if (appointment.status !== 'scheduled' || !appointment.sendSms || appointment.smsSent) {
+    // clientPhone is also re-checked here even though the client already
+    // forces sendSms off when there's no phone - the appointment could
+    // have been edited to drop the phone after this task was scheduled.
+    if (
+      appointment.status !== 'scheduled' ||
+      !appointment.sendSms ||
+      appointment.smsSent ||
+      !appointment.clientPhone
+    ) {
       res.status(200).send('Reminder no longer applicable, skipping.');
       return;
     }
@@ -121,6 +130,15 @@ export const sendSmsReminderTask = onRequest(
         reminderTaskName: null,
       });
       res.status(200).send('SMS sent.');
+
+      // Best-effort - lets the barber know a reminder actually went out
+      // without having to keep the app open and watch the dashboard's SMS
+      // status icon.
+      await sendPushToUser(appointment.barberId, {
+        title: 'SMS yuborildi',
+        body: `${appointment.clientName ?? appointment.clientPhone} ga eslatma SMS yuborildi`,
+        data: { type: 'smsSent', appointmentId },
+      });
     } catch (error) {
       // Cloud Functions' logger treats a `message` key in the metadata
       // object as reserved (it silently overwrites it with the logger

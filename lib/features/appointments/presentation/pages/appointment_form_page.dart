@@ -224,7 +224,7 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
                               children: [
                                 AppTextField(
                                   controller: _phoneController,
-                                  label: 'Telefon raqami *',
+                                  label: 'Telefon raqami (ixtiyoriy)',
                                   keyboardType: TextInputType.phone,
                                   inputFormatters: [UzPhoneInputFormatter()],
                                   prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.textSecondary),
@@ -283,24 +283,35 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
                           //   onSelected: cubit.onServiceTypeSelected,
                           // ),
                           // const SizedBox(height: 18),
-                          GlassCard(
-                            child: Row(
-                              children: [
-                                const Icon(Icons.sms_outlined, color: AppColors.gold),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('Eslatma SMS yuborish', style: AppTextStyles.title.copyWith(fontSize: 15)),
-                                      Text('Uchrashuvdan oldin avtomatik yuboriladi', style: AppTextStyles.caption),
-                                    ],
+                          Builder(builder: (context) {
+                            final hasPhone = state.phoneNumber.trim().isNotEmpty;
+                            return GlassCard(
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.sms_outlined, color: AppColors.gold),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Eslatma SMS yuborish', style: AppTextStyles.title.copyWith(fontSize: 15)),
+                                        Text(
+                                          hasPhone
+                                              ? 'Uchrashuvdan oldin avtomatik yuboriladi'
+                                              : 'Telefon raqami kiritilmagan',
+                                          style: AppTextStyles.caption,
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                Switch(value: state.sendSms, onChanged: cubit.toggleSendSms),
-                              ],
-                            ),
-                          ),
+                                  Switch(
+                                    value: hasPhone && state.sendSms,
+                                    onChanged: hasPhone ? cubit.toggleSendSms : null,
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
                           const SizedBox(height: 28),
                           AppPrimaryButton(
                             label: state.isEditing ? 'O\'zgarishlarni saqlash' : 'Uchrashuv yaratish',

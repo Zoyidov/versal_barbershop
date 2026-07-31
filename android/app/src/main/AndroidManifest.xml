@@ -6,7 +6,7 @@
          PushNotificationService.initialize()) can ask the user for it. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
-        android:label="VersalBarberShop"
+        android:label="VersalBarber Shop"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

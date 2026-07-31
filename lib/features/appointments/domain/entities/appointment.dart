@@ -21,7 +21,7 @@ extension AppointmentStatusX on AppointmentStatus {
 /// that hasn't been persisted to Firestore yet (i.e. still being created).
 class Appointment extends Equatable {
   final String? id;
-  final String clientPhone;
+  final String? clientPhone;
   final String? clientName;
   final String? serviceType;
   final String barberId;
@@ -35,7 +35,7 @@ class Appointment extends Equatable {
 
   const Appointment({
     this.id,
-    required this.clientPhone,
+    this.clientPhone,
     this.clientName,
     this.serviceType,
     required this.barberId,
@@ -67,7 +67,9 @@ class Appointment extends Equatable {
   Appointment copyWith({
     String? id,
     String? clientPhone,
+    bool clearClientPhone = false,
     String? clientName,
+    bool clearClientName = false,
     String? serviceType,
     String? barberId,
     DateTime? appointmentTime,
@@ -80,8 +82,8 @@ class Appointment extends Equatable {
   }) {
     return Appointment(
       id: id ?? this.id,
-      clientPhone: clientPhone ?? this.clientPhone,
-      clientName: clientName ?? this.clientName,
+      clientPhone: clearClientPhone ? null : (clientPhone ?? this.clientPhone),
+      clientName: clearClientName ? null : (clientName ?? this.clientName),
       serviceType: serviceType ?? this.serviceType,
       barberId: barberId ?? this.barberId,
       appointmentTime: appointmentTime ?? this.appointmentTime,

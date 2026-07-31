@@ -37,7 +37,7 @@ class _DashboardView extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Text('Uchrashuvni bekor qilasizmi?', style: AppTextStyles.title),
         content: Text(
-          '${appointment.clientName ?? appointment.clientPhone} uchun uchrashuv bekor qilingan deb belgilanadi.',
+          '${appointment.clientName ?? appointment.clientPhone ?? "Mijoz"} uchun uchrashuv bekor qilingan deb belgilanadi.',
           style: AppTextStyles.bodyMuted,
         ),
         actions: [

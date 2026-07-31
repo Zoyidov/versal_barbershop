@@ -27,6 +27,15 @@ class AuthCubit extends Cubit<AuthState> {
 
   StreamSubscription<Barber?>? _authSubscription;
 
+  /// Tracks which uid the push token has been registered for, independent
+  /// of [state]. `login()`/`register()` set `state.barber` themselves
+  /// (before this stream sees the same sign-in), so comparing against
+  /// `state.barber?.uid` here would race and make the stream think the
+  /// session isn't new - silently skipping registration on every normal
+  /// login. This field is only ever written from the registration call
+  /// itself, so it can't race with the state emits above.
+  String? _pushRegisteredUid;
+
   AuthCubit({
     required LoginUseCase loginUseCase,
     required RegisterUseCase registerUseCase,
@@ -47,16 +56,17 @@ class AuthCubit extends Cubit<AuthState> {
   void _bootstrap() {
     _authSubscription = _authRepository.watchAuthState().listen((barber) {
       if (barber != null) {
+        emit(state.copyWith(status: AuthStatus.authenticated, barber: barber, clearError: true));
         // Only (re-)register the push token on an actual sign-in - this
         // listener also re-fires on every unrelated profile change (an
         // admin topping up smsLimit, etc, since it's a live Firestore
         // stream), and re-registering there would be redundant.
-        final isNewSession = state.barber?.uid != barber.uid;
-        emit(state.copyWith(status: AuthStatus.authenticated, barber: barber, clearError: true));
-        if (isNewSession && isPushCapablePlatform) {
+        if (isPushCapablePlatform && _pushRegisteredUid != barber.uid) {
+          _pushRegisteredUid = barber.uid;
           _pushNotificationService.registerForUser(barber.uid);
         }
       } else {
+        _pushRegisteredUid = null;
         emit(state.copyWith(status: AuthStatus.unauthenticated, clearBarber: true));
       }
     });
