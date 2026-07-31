@@ -13,6 +13,11 @@ abstract class AuthRepository {
 
   Future<void> logout();
 
+  /// Barber-only: permanently deletes the signed-in barber's own account
+  /// (Firestore profile + Firebase Auth user) via a Cloud Function, then
+  /// signs out locally. The callable itself rejects admin callers.
+  Future<void> deleteAccount();
+
   /// Emits the currently authenticated barber (or null when signed out),
   /// driven by [FirebaseAuth.authStateChanges] plus a `users/{uid}` lookup.
   Stream<Barber?> watchAuthState();

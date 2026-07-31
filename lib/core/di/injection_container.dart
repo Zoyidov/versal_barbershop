@@ -9,6 +9,7 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/get_current_barber_usecase.dart';
 import '../../features/auth/domain/usecases/login_usecase.dart';
+import '../../features/auth/domain/usecases/delete_account_usecase.dart';
 import '../../features/auth/domain/usecases/logout_usecase.dart';
 import '../../features/auth/domain/usecases/register_usecase.dart';
 import '../../features/auth/domain/usecases/watch_barber_profile_usecase.dart';
@@ -88,6 +89,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => RegisterUseCase(sl()));
   sl.registerLazySingleton(() => LogoutUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteAccountUseCase(sl()));
   sl.registerLazySingleton(() => GetCurrentBarberUseCase(sl()));
   sl.registerLazySingleton(() => WatchBarberProfileUseCase(sl()));
   sl.registerFactory(
@@ -95,6 +97,7 @@ Future<void> initDependencies() async {
       loginUseCase: sl(),
       registerUseCase: sl(),
       logoutUseCase: sl(),
+      deleteAccountUseCase: sl(),
       getCurrentBarberUseCase: sl(),
       authRepository: sl(),
       pushNotificationService: sl(),

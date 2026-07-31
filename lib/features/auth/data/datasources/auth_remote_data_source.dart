@@ -13,6 +13,7 @@ abstract class AuthRemoteDataSource {
   Future<BarberModel> login({required String phoneNumber, required String password});
   Future<BarberModel> register({required String phoneNumber, required String password, required String name});
   Future<void> logout();
+  Future<void> deleteAccount();
   Stream<BarberModel?> watchAuthState();
   Future<BarberModel?> getCurrentBarber();
   Future<void> updateScheduleHours({required String uid, required int startHour, required int endHour});
@@ -159,6 +160,41 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<void> logout() => _auth.signOut();
+
+  /// Calls the `deleteOwnAccount` callable (deletes `users/{uid}` + the
+  /// Firebase Auth user server-side via the Admin SDK - a client can't
+  /// delete its own Firebase Auth user account any other way here since
+  /// this app never signs in through Firebase Auth's own flows, only via
+  /// custom-token exchange), then signs out locally so the app's auth
+  /// state stream reflects it immediately.
+  @override
+  Future<void> deleteAccount() async {
+    try {
+      final callable = _functions.httpsCallable('deleteOwnAccount');
+      await callable.call<Map<String, dynamic>>();
+      await _auth.signOut();
+    } on FirebaseFunctionsException catch (e) {
+      debugPrint('[Auth] deleteAccount() FirebaseFunctionsException: code=${e.code} message=${e.message}');
+      throw AppException(_mapDeleteAccountFunctionError(e));
+    } catch (e, stackTrace) {
+      debugPrint('[Auth] deleteAccount() unexpected error: $e');
+      debugPrint('$stackTrace');
+      rethrow;
+    }
+  }
+
+  String _mapDeleteAccountFunctionError(FirebaseFunctionsException e) {
+    switch (e.code) {
+      case 'permission-denied':
+        return 'Admin hisobini bu orqali o\'chirib bo\'lmaydi.';
+      case 'unauthenticated':
+        return 'Iltimos, qaytadan tizimga kiring.';
+      case 'unavailable':
+        return 'Internet aloqasi yo\'q. Iltimos, tekshirib qayta urinib ko\'ring.';
+      default:
+        return e.message ?? 'Hisobni o\'chirib bo\'lmadi. Iltimos, qayta urinib ko\'ring.';
+    }
+  }
 
   /// Live for as long as the app is signed in: re-subscribes to
   /// `users/{uid}` on every Firebase Auth change and keeps pushing profile

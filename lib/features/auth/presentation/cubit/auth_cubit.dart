@@ -8,6 +8,7 @@ import '../../../../core/error/app_exception.dart';
 import '../../../../core/services/push_notification_service.dart';
 import '../../domain/entities/barber.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/usecases/delete_account_usecase.dart';
 import '../../domain/usecases/get_current_barber_usecase.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
@@ -21,6 +22,7 @@ class AuthCubit extends Cubit<AuthState> {
   final LoginUseCase _loginUseCase;
   final RegisterUseCase _registerUseCase;
   final LogoutUseCase _logoutUseCase;
+  final DeleteAccountUseCase _deleteAccountUseCase;
   final GetCurrentBarberUseCase _getCurrentBarberUseCase;
   final AuthRepository _authRepository;
   final PushNotificationService _pushNotificationService;
@@ -40,12 +42,14 @@ class AuthCubit extends Cubit<AuthState> {
     required LoginUseCase loginUseCase,
     required RegisterUseCase registerUseCase,
     required LogoutUseCase logoutUseCase,
+    required DeleteAccountUseCase deleteAccountUseCase,
     required GetCurrentBarberUseCase getCurrentBarberUseCase,
     required AuthRepository authRepository,
     required PushNotificationService pushNotificationService,
   })  : _loginUseCase = loginUseCase,
         _registerUseCase = registerUseCase,
         _logoutUseCase = logoutUseCase,
+        _deleteAccountUseCase = deleteAccountUseCase,
         _getCurrentBarberUseCase = getCurrentBarberUseCase,
         _authRepository = authRepository,
         _pushNotificationService = pushNotificationService,
@@ -119,6 +123,25 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> logout() async {
     if (isPushCapablePlatform) await _pushNotificationService.unregisterCurrentUser();
     await _logoutUseCase();
+  }
+
+  /// Barber-only, irreversible: deletes the signed-in barber's own account
+  /// and signs out. On failure (e.g. an admin somehow reaching this, or a
+  /// network error) leaves the session intact with [AuthState.errorMessage]
+  /// set, so the caller (a confirmation dialog) can show it inline and let
+  /// the barber retry instead of being silently signed out.
+  Future<void> deleteAccount() async {
+    try {
+      if (isPushCapablePlatform) await _pushNotificationService.unregisterCurrentUser();
+      await _deleteAccountUseCase();
+      emit(state.copyWith(clearError: true));
+    } on AppException catch (e) {
+      emit(state.copyWith(errorMessage: e.message));
+    } catch (e, stackTrace) {
+      debugPrint('[AuthCubit] deleteAccount() failed with unexpected error: $e');
+      debugPrint('$stackTrace');
+      emit(state.copyWith(errorMessage: 'Xatolik yuz berdi. Iltimos, qayta urinib ko\'ring.'));
+    }
   }
 
   /// Optional eager restore, called once at app start so the splash/login

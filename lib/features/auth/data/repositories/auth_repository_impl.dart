@@ -22,6 +22,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> logout() => _remoteDataSource.logout();
 
   @override
+  Future<void> deleteAccount() => _remoteDataSource.deleteAccount();
+
+  @override
   Stream<Barber?> watchAuthState() => _remoteDataSource.watchAuthState();
 
   @override

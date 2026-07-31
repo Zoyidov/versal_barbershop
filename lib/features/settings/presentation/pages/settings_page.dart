@@ -15,6 +15,7 @@ import '../../../admin/presentation/pages/user_management_page.dart';
 import '../../../auth/domain/entities/barber.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
 import '../../widgets/app_hour_field.dart';
+import '../../widgets/delete_account_dialog.dart';
 import '../../widgets/logout_dialog.dart';
 import '../cubit/settings_cubit.dart';
 
@@ -238,6 +239,21 @@ class _SettingsViewState extends State<_SettingsView> {
                       },
                     ),
                   ),
+                  if (!isAdmin) ...[
+                    const SizedBox(height: 12),
+                    AppGhostButton(
+                      label: 'Hisobni o\'chirish',
+                      icon: Icons.delete_outline,
+                      color: AppColors.danger,
+                      onPressed: () => showDialog(
+                        context: context,
+                        barrierDismissible: true,
+                        builder: (BuildContext context) {
+                          return const DeleteAccountDialog();
+                        },
+                      ),
+                    ),
+                  ],
                 ],
               ),
             );

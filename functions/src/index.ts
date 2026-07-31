@@ -6,7 +6,7 @@ import { initializeApp } from 'firebase-admin/app';
 // which is after this call.
 initializeApp();
 
-export { loginWithPhonePassword, registerBarber, approveBarber, setSmsLimit, setUserActive } from './auth';
+export { loginWithPhonePassword, registerBarber, approveBarber, setSmsLimit, setUserActive, deleteOwnAccount } from './auth';
 export { onAppointmentCreated, onAppointmentUpdated } from './appointmentTriggers';
 export { onGlobalSettingsUpdated } from './settingsTriggers';
 export { sendSmsReminderTask } from './smsReminderTask';

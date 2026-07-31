@@ -220,3 +220,30 @@ export const setUserActive = onCall({ region: REGION }, async (request) => {
 
   return { success: true };
 });
+
+/**
+ * Self-service, barber-only: permanently deletes the caller's own account
+ * (Firestore profile + Firebase Auth user). Admins are rejected here as a
+ * server-side backstop - the client also hides this action from them - so
+ * an admin account can never be removed through this path.
+ */
+export const deleteOwnAccount = onCall({ region: REGION }, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Sign in required.');
+  }
+
+  const uid = request.auth.uid;
+  const callerDoc = await db.collection('users').doc(uid).get();
+  const caller = callerDoc.data() as UserDoc | undefined;
+  if (!caller) {
+    throw new HttpsError('not-found', 'User not found.');
+  }
+  if (caller.role === 'admin') {
+    throw new HttpsError('permission-denied', 'Admin accounts cannot be self-deleted.');
+  }
+
+  await db.collection('users').doc(uid).delete();
+  await getAuth().deleteUser(uid);
+
+  return { success: true };
+});
