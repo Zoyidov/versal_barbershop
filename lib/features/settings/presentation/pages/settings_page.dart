@@ -10,6 +10,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/shimmer_placeholder.dart';
+import '../../../admin/presentation/cubit/pending_approval_cubit.dart';
 import '../../../admin/presentation/pages/admin_schedule_page.dart';
 import '../../../admin/presentation/pages/user_management_page.dart';
 import '../../../auth/domain/entities/barber.dart';
@@ -230,7 +231,7 @@ class _SettingsViewState extends State<_SettingsView> {
                   AppGhostButton(
                     label: 'Chiqish',
                     icon: Icons.logout,
-                    color: AppColors.textSecondary,
+                    color: AppColors.danger,
                     onPressed: () => showDialog(
                       context: context,
                       barrierDismissible: true,
@@ -240,19 +241,40 @@ class _SettingsViewState extends State<_SettingsView> {
                     ),
                   ),
                   if (!isAdmin) ...[
-                    const SizedBox(height: 12),
-                    AppGhostButton(
-                      label: 'Hisobni o\'chirish',
-                      icon: Icons.delete_outline,
-                      color: AppColors.danger,
-                      onPressed: () => showDialog(
-                        context: context,
-                        barrierDismissible: true,
-                        builder: (BuildContext context) {
-                          return const DeleteAccountDialog();
-                        },
+                    const SizedBox(height: 30),
+                    Center(
+                      child: GestureDetector(
+                        onTap: () => showDialog(
+                          context: context,
+                          barrierDismissible: true,
+                          builder: (BuildContext context) {
+                            return const DeleteAccountDialog();
+                          },
+                        ),
+                        child: Text(
+                          'Accountni o\'chirish',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            decoration: TextDecoration.underline,
+                            decorationColor: AppColors.textSecondary,
+                          ),
+                        ),
                       ),
-                    ),
+                    )
+                    // AppGhostButton(
+                    //   label: 'Hisobni o\'chirish',
+                    //   icon: Icons.delete_outline,
+                    //   color: AppColors.danger,
+                    //   onPressed: () => showDialog(
+                    //     context: context,
+                    //     barrierDismissible: true,
+                    //     builder: (BuildContext context) {
+                    //       return const DeleteAccountDialog();
+                    //     },
+                    //   ),
+                    // ),
                   ],
                 ],
               ),
@@ -399,6 +421,7 @@ class _SettingsViewState extends State<_SettingsView> {
   /// single glass menu list (icon chip + title + subtitle + chevron)
   /// rather than two separate outlined buttons.
   Widget _buildAdminLinksCard(BuildContext context) {
+    final pendingCount = context.watch<PendingApprovalCubit>().state;
     return GlassCard(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
@@ -408,6 +431,7 @@ class _SettingsViewState extends State<_SettingsView> {
             icon: Icons.people_alt_outlined,
             title: 'Foydalanuvchilar',
             subtitle: 'Tasdiqlash, SMS limiti, holat',
+            badgeCount: pendingCount,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const UserManagementPage()),
             ),
@@ -735,11 +759,16 @@ class _AdminMenuRow extends StatelessWidget {
   final String subtitle;
   final VoidCallback onTap;
 
+  /// Small count badge shown on the icon chip's corner (e.g. barbers
+  /// awaiting approval). 0 or omitted shows no badge.
+  final int badgeCount;
+
   const _AdminMenuRow({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.badgeCount = 0,
   });
 
   @override
@@ -752,15 +781,45 @@ class _AdminMenuRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
           child: Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.gold.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: Icon(icon, color: AppColors.gold, size: 20),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.gold.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(icon, color: AppColors.gold, size: 20),
+                  ),
+                  if (badgeCount > 0)
+                    Positioned(
+                      top: -6,
+                      right: -6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                        decoration: BoxDecoration(
+                          color: AppColors.danger,
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(color: AppColors.surface, width: 1.5),
+                        ),
+                        child: Center(
+                          child: Text(
+                            badgeCount > 99 ? '99+' : '$badgeCount',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              height: 1,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(width: 14),
               Expanded(

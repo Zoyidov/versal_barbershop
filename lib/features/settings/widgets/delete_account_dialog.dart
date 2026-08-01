@@ -35,7 +35,7 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
       });
       return;
     }
-    // Success: the account + Firebase Auth user are already gone and
+    // Success: the account's Firestore profile is already gone and
     // deleteAccount() has signed out, so _AuthGate has already swapped the
     // screen behind this dialog to LoginPage - just close the overlay.
     Navigator.pop(context);

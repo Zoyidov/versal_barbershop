@@ -16,6 +16,11 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   }
 
   @override
+  Stream<Map<DateTime, int>> watchAppointmentCountsForRange(DateTime start, DateTime end, {String? barberId}) {
+    return _remoteDataSource.watchAppointmentCountsForRange(start, end, barberId: barberId);
+  }
+
+  @override
   Future<Appointment> createAppointment(Appointment appointment) {
     return _remoteDataSource.createAppointment(AppointmentModel.fromEntity(appointment));
   }

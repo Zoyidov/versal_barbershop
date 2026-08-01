@@ -11,6 +11,12 @@ abstract class AppointmentRemoteDataSource {
   /// for an admin caller - firestore.rules restrict a non-admin's read to
   /// their own `barberId`).
   Stream<List<AppointmentModel>> watchAppointmentsForDay(DateTime day, {String? barberId});
+
+  /// Live per-day appointment counts (non-cancelled only) for every day in
+  /// `[start, end]`, keyed by day (midnight, local time) - powers the
+  /// calendar strip's badge. Same `barberId` semantics as
+  /// [watchAppointmentsForDay].
+  Stream<Map<DateTime, int>> watchAppointmentCountsForRange(DateTime start, DateTime end, {String? barberId});
   Future<AppointmentModel> createAppointment(AppointmentModel appointment);
   Future<void> updateAppointment(AppointmentModel appointment);
   Future<void> cancelAppointment(String appointmentId);
@@ -48,6 +54,37 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
         .map((snapshot) => snapshot.docs.map(AppointmentModel.fromSnapshot).toList())
         .handleError((error) {
       throw AppException('Uchrashuvlarni yuklab bo\'lmadi: $error');
+    });
+  }
+
+  @override
+  Stream<Map<DateTime, int>> watchAppointmentCountsForRange(DateTime start, DateTime end, {String? barberId}) {
+    final rangeStart = DateFormatter.startOfDay(start);
+    final rangeEnd = DateFormatter.endOfDay(end);
+
+    Query<Map<String, dynamic>> query = _appointments.where(
+      AppointmentFields.appointmentTime,
+      isGreaterThanOrEqualTo: Timestamp.fromDate(rangeStart),
+      isLessThanOrEqualTo: Timestamp.fromDate(rangeEnd),
+    );
+    if (barberId != null) {
+      query = query.where(AppointmentFields.barberId, isEqualTo: barberId);
+    }
+
+    return query.snapshots().map((snapshot) {
+      final counts = <DateTime, int>{};
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        // A cancelled slot no longer represents a client on that day, so
+        // it's excluded from the badge count.
+        if (data[AppointmentFields.status] == 'cancelled') continue;
+        final time = (data[AppointmentFields.appointmentTime] as Timestamp).toDate();
+        final day = DateTime(time.year, time.month, time.day);
+        counts[day] = (counts[day] ?? 0) + 1;
+      }
+      return counts;
+    }).handleError((error) {
+      throw AppException('Kunlik mijozlar sonini yuklab bo\'lmadi: $error');
     });
   }
 

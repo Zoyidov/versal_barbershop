@@ -23,6 +23,7 @@ import '../../features/admin/domain/usecases/set_sms_limit_usecase.dart';
 import '../../features/admin/domain/usecases/set_user_active_usecase.dart';
 import '../../features/admin/domain/usecases/update_barber_schedule_usecase.dart';
 import '../../features/admin/domain/usecases/watch_users_usecase.dart';
+import '../../features/admin/presentation/cubit/pending_approval_cubit.dart';
 import '../../features/admin/presentation/cubit/user_management_cubit.dart';
 
 import '../../features/appointments/data/datasources/appointment_remote_data_source.dart';
@@ -32,6 +33,7 @@ import '../../features/appointments/domain/usecases/cancel_appointment_usecase.d
 import '../../features/appointments/domain/usecases/create_appointment_usecase.dart';
 import '../../features/appointments/domain/usecases/get_client_history_usecase.dart';
 import '../../features/appointments/domain/usecases/update_appointment_usecase.dart';
+import '../../features/appointments/domain/usecases/watch_appointment_counts_for_range_usecase.dart';
 import '../../features/appointments/domain/usecases/watch_appointments_for_day_usecase.dart';
 import '../../features/appointments/presentation/cubit/appointment_form_cubit.dart';
 import '../../features/appointments/presentation/cubit/dashboard_cubit.dart';
@@ -125,6 +127,13 @@ Future<void> initDependencies() async {
       updateBarberScheduleUseCase: sl(),
     ),
   );
+  // Provided once above `RootShell` (see app.dart's `_AuthGate`) so the
+  // bottom-nav badge and the Settings-page "Foydalanuvchilar" row badge
+  // share the same count instead of each opening their own listener.
+  // `enabled` is the signed-in user's `isAdmin` flag at provide-time.
+  sl.registerFactoryParam<PendingApprovalCubit, bool, void>(
+    (enabled, _) => PendingApprovalCubit(watchUsersUseCase: sl(), enabled: enabled),
+  );
 
   // ---- Appointments feature ----
   sl.registerLazySingleton<AppointmentRemoteDataSource>(
@@ -134,6 +143,7 @@ Future<void> initDependencies() async {
     () => AppointmentRepositoryImpl(remoteDataSource: sl()),
   );
   sl.registerLazySingleton(() => WatchAppointmentsForDayUseCase(sl()));
+  sl.registerLazySingleton(() => WatchAppointmentCountsForRangeUseCase(sl()));
   sl.registerLazySingleton(() => CreateAppointmentUseCase(sl()));
   sl.registerLazySingleton(() => UpdateAppointmentUseCase(sl()));
   sl.registerLazySingleton(() => CancelAppointmentUseCase(sl()));
@@ -141,6 +151,7 @@ Future<void> initDependencies() async {
   sl.registerFactory(
     () => DashboardCubit(
       watchAppointmentsForDayUseCase: sl(),
+      watchAppointmentCountsForRangeUseCase: sl(),
       cancelAppointmentUseCase: sl(),
       watchSettingsUseCase: sl(),
       watchBarberProfileUseCase: sl(),
@@ -154,6 +165,7 @@ Future<void> initDependencies() async {
   sl.registerFactory(
     () => DashboardCubit(
       watchAppointmentsForDayUseCase: sl(),
+      watchAppointmentCountsForRangeUseCase: sl(),
       cancelAppointmentUseCase: sl(),
       watchSettingsUseCase: sl(),
       watchBarberProfileUseCase: sl(),

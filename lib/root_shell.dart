@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_colors.dart';
 import 'core/widgets/custom_bottom_nav_bar.dart';
 import 'core/widgets/gradient_background.dart';
+import 'features/admin/presentation/cubit/pending_approval_cubit.dart';
 import 'features/appointments/presentation/pages/dashboard_page.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/settings/presentation/pages/settings_page.dart';
@@ -38,9 +39,11 @@ class _RootShellState extends State<RootShell> {
     BottomNavItemData(icon: Icons.bar_chart_outlined, activeIcon: Icons.bar_chart, label: 'Statistika'),
     BottomNavItemData(icon: Icons.settings_outlined, activeIcon: Icons.settings, label: 'Sozlamalar'),
   ];
+  static const _settingsTabIndex = 2;
 
   @override
   Widget build(BuildContext context) {
+    final pendingCount = context.watch<PendingApprovalCubit>().state;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: GradientBackground(
@@ -49,6 +52,7 @@ class _RootShellState extends State<RootShell> {
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _index,
         items: _items,
+        badgeCounts: {_settingsTabIndex: pendingCount},
         onTap: (index) => setState(() => _index = index),
         onSearchTap: () {
           final barber = context.read<AuthCubit>().state.barber;

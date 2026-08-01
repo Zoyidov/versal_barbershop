@@ -161,12 +161,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> logout() => _auth.signOut();
 
-  /// Calls the `deleteOwnAccount` callable (deletes `users/{uid}` + the
-  /// Firebase Auth user server-side via the Admin SDK - a client can't
-  /// delete its own Firebase Auth user account any other way here since
-  /// this app never signs in through Firebase Auth's own flows, only via
-  /// custom-token exchange), then signs out locally so the app's auth
-  /// state stream reflects it immediately.
+  /// Calls the `deleteOwnAccount` callable (deletes the `users/{uid}`
+  /// Firestore profile server-side - the underlying Firebase Auth user is
+  /// deliberately left in place/orphaned, see the callable's doc comment),
+  /// then signs out locally so the app's auth state stream reflects it
+  /// immediately.
   @override
   Future<void> deleteAccount() async {
     try {

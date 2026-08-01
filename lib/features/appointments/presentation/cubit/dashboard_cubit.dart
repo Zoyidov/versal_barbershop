@@ -9,6 +9,7 @@ import '../../../auth/domain/usecases/watch_barber_profile_usecase.dart';
 import '../../../settings/domain/usecases/watch_settings_usecase.dart';
 import '../../domain/entities/appointment.dart';
 import '../../domain/usecases/cancel_appointment_usecase.dart';
+import '../../domain/usecases/watch_appointment_counts_for_range_usecase.dart';
 import '../../domain/usecases/watch_appointments_for_day_usecase.dart';
 
 part 'dashboard_state.dart';
@@ -20,7 +21,15 @@ part 'dashboard_state.dart';
 /// shop-wide default in settings/global for barbers who haven't set
 /// personal hours yet) so the timetable's start/end stay in sync.
 class DashboardCubit extends Cubit<DashboardState> {
+  // Must match `WeekCalendarStrip`'s `_pastRangeInDays`/`_futureRangeInDays`
+  // (lib/core/widgets/week_calendar_strip.dart) - this is the exact window
+  // of days the strip can ever scroll to, so counts outside it would never
+  // be shown anyway.
+  static const int _countsPastRangeInDays = 365;
+  static const int _countsFutureRangeInDays = 120;
+
   final WatchAppointmentsForDayUseCase _watchAppointmentsForDayUseCase;
+  final WatchAppointmentCountsForRangeUseCase _watchAppointmentCountsForRangeUseCase;
   final CancelAppointmentUseCase _cancelAppointmentUseCase;
   final WatchSettingsUseCase _watchSettingsUseCase;
   final WatchBarberProfileUseCase _watchBarberProfileUseCase;
@@ -39,28 +48,52 @@ class DashboardCubit extends Cubit<DashboardState> {
   int? _barberEndHour;
 
   StreamSubscription<List<Appointment>>? _subscription;
+  StreamSubscription<Map<DateTime, int>>? _countsSubscription;
   StreamSubscription<dynamic>? _settingsSubscription;
   StreamSubscription<Barber?>? _barberProfileSubscription;
 
   DashboardCubit({
     required WatchAppointmentsForDayUseCase watchAppointmentsForDayUseCase,
+    required WatchAppointmentCountsForRangeUseCase watchAppointmentCountsForRangeUseCase,
     required CancelAppointmentUseCase cancelAppointmentUseCase,
     required WatchSettingsUseCase watchSettingsUseCase,
     required WatchBarberProfileUseCase watchBarberProfileUseCase,
     String? barberId,
   })  : _watchAppointmentsForDayUseCase = watchAppointmentsForDayUseCase,
+        _watchAppointmentCountsForRangeUseCase = watchAppointmentCountsForRangeUseCase,
         _cancelAppointmentUseCase = cancelAppointmentUseCase,
         _watchSettingsUseCase = watchSettingsUseCase,
         _watchBarberProfileUseCase = watchBarberProfileUseCase,
         _barberId = barberId,
         super(DashboardState(selectedDay: DateTime.now())) {
     _subscribeToDay(state.selectedDay);
+    _subscribeToDayCounts();
     _settingsSubscription = _watchSettingsUseCase().listen((settings) {
       _globalStartHour = settings.scheduleStartHour;
       _globalEndHour = settings.scheduleEndHour;
       _emitScheduleHours();
     });
     _subscribeToBarberSchedule();
+  }
+
+  /// Re-establishes the live counts listener for the whole calendar-strip
+  /// window, anchored on today so it doesn't drift as the selected day
+  /// changes (unlike [_subscribeToDay], the strip badges cover a fixed
+  /// range regardless of which single day is selected).
+  void _subscribeToDayCounts() {
+    _countsSubscription?.cancel();
+    final today = DateTime.now();
+    final anchor = DateTime(today.year, today.month, today.day);
+    final start = anchor.subtract(const Duration(days: _countsPastRangeInDays));
+    final end = anchor.add(const Duration(days: _countsFutureRangeInDays));
+    _countsSubscription = _watchAppointmentCountsForRangeUseCase(start, end, barberId: _barberId).listen(
+      (counts) => emit(state.copyWith(dayAppointmentCounts: counts)),
+      // Badge counts are a secondary/cosmetic affordance - swallow errors
+      // here rather than surfacing them via state.errorMessage, so a
+      // transient failure on this stream never covers up (or gets
+      // overwritten by) an error from the actual appointments listener.
+      onError: (_) {},
+    );
   }
 
   void _subscribeToBarberSchedule() {
@@ -92,6 +125,7 @@ class DashboardCubit extends Cubit<DashboardState> {
     _barberId = barberId;
     emit(state.copyWith(status: DashboardStatus.loading, clearError: true));
     _subscribeToDay(state.selectedDay);
+    _subscribeToDayCounts();
     _subscribeToBarberSchedule();
   }
 
@@ -146,6 +180,7 @@ class DashboardCubit extends Cubit<DashboardState> {
   @override
   Future<void> close() {
     _subscription?.cancel();
+    _countsSubscription?.cancel();
     _settingsSubscription?.cancel();
     _barberProfileSubscription?.cancel();
     return super.close();

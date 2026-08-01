@@ -61,12 +61,24 @@ class _RegisterPageState extends State<RegisterPage> {
     return Scaffold(
       body: GradientBackground(
         child: BlocListener<AuthCubit, AuthState>(
-          listenWhen: (previous, current) => previous.errorMessage != current.errorMessage,
+          listenWhen: (previous, current) =>
+              previous.errorMessage != current.errorMessage ||
+              (previous.status != current.status && current.status == AuthStatus.authenticated),
           listener: (context, state) {
             if (state.errorMessage != null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.errorMessage!)),
               );
+              return;
+            }
+            if (state.status == AuthStatus.authenticated) {
+              // Registration just succeeded - pop back to the route
+              // underneath (the _AuthGate-built screen in app.dart), which
+              // has already switched to PendingApprovalPage now that
+              // AuthCubit's state is authenticated + unapproved. Without
+              // this pop, this pushed RegisterPage route would keep
+              // covering that screen and the user would appear stuck here.
+              Navigator.of(context).pop();
             }
           },
           child: SafeArea(

@@ -32,6 +32,10 @@ class CustomBottomNavBar extends StatelessWidget {
   final List<BottomNavItemData> items;
   final VoidCallback? onSearchTap;
 
+  /// Small count badge per tab index (e.g. pending-approval count on the
+  /// Settings tab). A missing or zero entry shows no badge.
+  final Map<int, int> badgeCounts;
+
   static const double _barHeight = 56;
 
   const CustomBottomNavBar({
@@ -40,6 +44,7 @@ class CustomBottomNavBar extends StatelessWidget {
     required this.onTap,
     required this.items,
     this.onSearchTap,
+    this.badgeCounts = const {},
   });
 
   @override
@@ -73,6 +78,7 @@ class CustomBottomNavBar extends StatelessWidget {
       children: List.generate(items.length, (index) {
         final selected = index == currentIndex;
         final item = items[index];
+        final badgeCount = badgeCounts[index] ?? 0;
         return Expanded(
           child: Material(
             color: Colors.transparent,
@@ -88,10 +94,40 @@ class CustomBottomNavBar extends StatelessWidget {
                   // purpose: icon and label sizes are fixed constants
                   // regardless of `selected`.
                   children: [
-                    Icon(
-                      selected ? item.activeIcon : item.icon,
-                      size: 20,
-                      color: selected ? AppColors.gold : AppColors.textMuted,
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Icon(
+                          selected ? item.activeIcon : item.icon,
+                          size: 20,
+                          color: selected ? AppColors.gold : AppColors.textMuted,
+                        ),
+                        if (badgeCount > 0)
+                          Positioned(
+                            top: -4,
+                            right: -8,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              constraints: const BoxConstraints(minWidth: 15, minHeight: 15),
+                              decoration: BoxDecoration(
+                                color: AppColors.danger,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: AppColors.surface, width: 1.5),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  badgeCount > 9 ? '9+' : '$badgeCount',
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                    height: 1,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(

@@ -222,10 +222,18 @@ export const setUserActive = onCall({ region: REGION }, async (request) => {
 });
 
 /**
- * Self-service, barber-only: permanently deletes the caller's own account
- * (Firestore profile + Firebase Auth user). Admins are rejected here as a
- * server-side backstop - the client also hides this action from them - so
- * an admin account can never be removed through this path.
+ * Self-service, barber-only: deletes the caller's own Firestore profile
+ * (`users/{uid}`) so the account looks and behaves as if it never existed -
+ * `loginWithPhonePassword` and the `registerBarber` uniqueness check both
+ * key off this doc's `phoneNumber` field, not the underlying Firebase Auth
+ * record, so this alone frees the phone number up for a fresh registration.
+ * The Firebase Auth user itself is deliberately left in place (not deleted)
+ * and simply becomes orphaned - it can never sign in again since
+ * `loginWithPhonePassword` has no doc left to look up, and `registerBarber`
+ * always mints a brand-new Auth uid for the re-registered account. Admins
+ * are rejected here as a server-side backstop - the client also hides this
+ * action from them - so an admin account can never be removed through this
+ * path.
  */
 export const deleteOwnAccount = onCall({ region: REGION }, async (request) => {
   if (!request.auth) {
@@ -243,7 +251,6 @@ export const deleteOwnAccount = onCall({ region: REGION }, async (request) => {
   }
 
   await db.collection('users').doc(uid).delete();
-  await getAuth().deleteUser(uid);
 
   return { success: true };
 });

@@ -47,6 +47,7 @@ class _AdminScheduleViewState extends State<_AdminScheduleView> {
       appBar: AppBar(
         title: const Text('Barberlar jadvali'),
         backgroundColor: Colors.transparent,
+        scrolledUnderElevation: 0,
       ),
       body: SafeArea(
         child: BlocBuilder<UserManagementCubit, UserManagementState>(
@@ -85,8 +86,7 @@ class _AdminScheduleViewState extends State<_AdminScheduleView> {
                         children: [
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
+                            child: Center(
                               child: Text(
                                 DateFormatter.fullDate(state.selectedDay),
                                 style: AppTextStyles.bodyMuted,
@@ -98,6 +98,7 @@ class _AdminScheduleViewState extends State<_AdminScheduleView> {
                             selectedDay: state.selectedDay,
                             onDaySelected: (day) =>
                                 context.read<DashboardCubit>().selectDay(day),
+                            appointmentCounts: state.dayAppointmentCounts,
                           ),
                           const SizedBox(height: 8),
                           Expanded(

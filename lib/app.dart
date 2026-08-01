@@ -7,6 +7,7 @@ import 'core/di/injection_container.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/gradient_background.dart';
+import 'features/admin/presentation/cubit/pending_approval_cubit.dart';
 import 'features/auth/presentation/cubit/auth_cubit.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/pending_approval_page.dart';
@@ -72,7 +73,10 @@ class _AuthGate extends StatelessWidget {
             if (barber != null && !barber.isAdmin && !barber.approved) {
               return const PendingApprovalPage();
             }
-            return const RootShell();
+            return BlocProvider<PendingApprovalCubit>(
+              create: (_) => sl<PendingApprovalCubit>(param1: barber?.isAdmin ?? false),
+              child: const RootShell(),
+            );
           case AuthStatus.unauthenticated:
             return const LoginPage();
           case AuthStatus.unknown:

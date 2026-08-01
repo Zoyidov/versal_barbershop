@@ -65,27 +65,24 @@ class _DashboardView extends StatelessWidget {
           },
           builder: (context, state) {
             return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Bosh sahifa', style: AppTextStyles.displayLarge.copyWith(fontSize: 26)),
+                      Text(DateFormatter.fullDate(state.selectedDay), style: AppTextStyles.bodyMuted),
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(DateFormatter.fullDate(state.selectedDay), style: AppTextStyles.bodyMuted),
-                  ),
-                ),
+
                 const SizedBox(height: 12),
                 WeekCalendarStrip(
                   selectedDay: state.selectedDay,
                   onDaySelected: (day) => context.read<DashboardCubit>().selectDay(day),
+                  appointmentCounts: state.dayAppointmentCounts,
                 ),
                 const SizedBox(height: 8),
                 Expanded(

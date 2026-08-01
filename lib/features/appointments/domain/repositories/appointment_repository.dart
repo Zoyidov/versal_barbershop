@@ -8,6 +8,12 @@ abstract class AppointmentRepository {
   /// per firestore.rules.
   Stream<List<Appointment>> watchAppointmentsForDay(DateTime day, {String? barberId});
 
+  /// Live per-day appointment counts (non-cancelled only) for every day in
+  /// `[start, end]`, keyed by day (midnight, local time) - powers the
+  /// calendar strip's badge. Same `barberId` semantics as
+  /// [watchAppointmentsForDay].
+  Stream<Map<DateTime, int>> watchAppointmentCountsForRange(DateTime start, DateTime end, {String? barberId});
+
   Future<Appointment> createAppointment(Appointment appointment);
 
   Future<void> updateAppointment(Appointment appointment);

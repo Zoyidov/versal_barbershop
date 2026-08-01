@@ -10,6 +10,11 @@ class DashboardState extends Equatable {
   final int scheduleStartHour;
   final int scheduleEndHour;
 
+  /// Live per-day appointment counts (non-cancelled) across the whole
+  /// calendar-strip window, keyed by day (midnight, local time) - drives
+  /// `WeekCalendarStrip`'s badges.
+  final Map<DateTime, int> dayAppointmentCounts;
+
   const DashboardState({
     required this.selectedDay,
     this.status = DashboardStatus.loading,
@@ -17,6 +22,7 @@ class DashboardState extends Equatable {
     this.errorMessage,
     this.scheduleStartHour = 6,
     this.scheduleEndHour = 20,
+    this.dayAppointmentCounts = const {},
   });
 
   DashboardState copyWith({
@@ -27,6 +33,7 @@ class DashboardState extends Equatable {
     bool clearError = false,
     int? scheduleStartHour,
     int? scheduleEndHour,
+    Map<DateTime, int>? dayAppointmentCounts,
   }) {
     return DashboardState(
       selectedDay: selectedDay ?? this.selectedDay,
@@ -35,10 +42,18 @@ class DashboardState extends Equatable {
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       scheduleStartHour: scheduleStartHour ?? this.scheduleStartHour,
       scheduleEndHour: scheduleEndHour ?? this.scheduleEndHour,
+      dayAppointmentCounts: dayAppointmentCounts ?? this.dayAppointmentCounts,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [selectedDay, status, appointments, errorMessage, scheduleStartHour, scheduleEndHour];
+  List<Object?> get props => [
+        selectedDay,
+        status,
+        appointments,
+        errorMessage,
+        scheduleStartHour,
+        scheduleEndHour,
+        dayAppointmentCounts,
+      ];
 }
