@@ -46,6 +46,7 @@ class _RootShellState extends State<RootShell> {
     final pendingCount = context.watch<PendingApprovalCubit>().state;
     return Scaffold(
       backgroundColor: AppColors.background,
+      extendBody: true,
       body: GradientBackground(
         child: IndexedStack(index: _index, children: _pages),
       ),

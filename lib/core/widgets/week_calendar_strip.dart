@@ -121,6 +121,7 @@ class _WeekCalendarStripState extends State<WeekCalendarStrip> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisAlignment: MainAxisAlignment.center,
+
                       children: [
                         Text(
                           DateFormatter.weekdayShort(day).toUpperCase(),

@@ -75,6 +75,7 @@ class _StatisticsViewState extends State<_StatisticsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Column(
           children: [
@@ -110,7 +111,7 @@ class _StatisticsViewState extends State<_StatisticsView> {
                         ? _selectedBarberId
                         : widget.barberId;
                     return ListView(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
                       children: [
                         if (widget.isAdmin) ...[
                           _buildSummaryRow(state.clients),

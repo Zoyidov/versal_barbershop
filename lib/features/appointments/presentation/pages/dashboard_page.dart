@@ -57,6 +57,7 @@ class _DashboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: BlocConsumer<DashboardCubit, DashboardState>(
           listenWhen: (p, c) => p.errorMessage != c.errorMessage && c.errorMessage != null,

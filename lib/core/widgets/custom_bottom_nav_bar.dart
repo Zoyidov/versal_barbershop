@@ -21,11 +21,13 @@ class BottomNavItemData {
 /// its own tappable surface (mirrors the iOS Liquid Glass tab bar /
 /// Telegram pattern of splitting search out of the main bar).
 ///
-/// IMPORTANT (explicit product requirement): tab items must stay
-/// perfectly static when switching tabs — no scale/bounce/translate
-/// animation on the icon or label. The only thing that changes on
-/// selection is color; nothing moves or resizes. Do not add
-/// AnimatedContainer/AnimatedScale-driven bounce here.
+/// A gold "liquid" indicator pill slides behind the selected tab
+/// (AnimatedPositioned, eased) to mark the active tab - that indicator is
+/// the only thing that moves. Per product requirement, the icon and label
+/// themselves stay perfectly static when switching tabs: no scale/bounce/
+/// translate animation on them, fixed size regardless of selection: only
+/// their color changes. Do not add AnimatedContainer/AnimatedScale-driven
+/// bounce to the icon/label.
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -53,26 +55,67 @@ class CustomBottomNavBar extends StatelessWidget {
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(child: _GlassPill(height: _barHeight, child: _buildTabs())),
-            if (onSearchTap != null) ...[
-              const SizedBox(width: 10),
-              _GlassPill(
-                height: _barHeight,
-                width: _barHeight,
-                onTap: onSearchTap,
-                child: const Icon(Icons.search_rounded, color: AppColors.textPrimary, size: 22),
+        // Blur the whole bar's bounding box - including the gap between the
+        // tabs pill and the search pill - so scrolled content behind that
+        // gap reads blurred/glassy like the rest of the bar instead of
+        // poking through sharp and looking like a stray background patch.
+        child: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            child: SizedBox(
+              height: _barHeight,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(child: _GlassPill(height: _barHeight, child: _buildTabs())),
+                  if (onSearchTap != null) ...[
+                    const SizedBox(width: 10),
+                    _GlassPill(
+                      height: _barHeight,
+                      width: _barHeight,
+                      onTap: onSearchTap,
+                      child: const Icon(Icons.search_rounded, color: AppColors.textPrimary, size: 22),
+                    ),
+                  ],
+                ],
               ),
-            ],
-          ],
+            ),
+          ),
         ),
       ),
     );
   }
 
   Widget _buildTabs() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final segmentWidth = constraints.maxWidth / items.length;
+        const indicatorInset = 6.0;
+        return Stack(
+          children: [
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 320),
+              curve: Curves.easeOutCubic,
+              left: currentIndex * segmentWidth + indicatorInset,
+              top: 6,
+              bottom: 6,
+              width: segmentWidth - indicatorInset * 2,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
+                ),
+              ),
+            ),
+            _buildTabRow(),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildTabRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: List.generate(items.length, (index) {
@@ -177,7 +220,7 @@ class _GlassPill extends StatelessWidget {
               width: width,
               decoration: BoxDecoration(
                 borderRadius: radius,
-                color: AppColors.surface.withValues(alpha: 0.6),
+                color: AppColors.surface.withValues(alpha: 0.35),
                 border: Border.all(color: AppColors.surfaceGlassBorder),
                 boxShadow: [
                   BoxShadow(

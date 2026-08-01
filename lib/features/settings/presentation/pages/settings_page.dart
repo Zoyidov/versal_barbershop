@@ -131,6 +131,7 @@ class _SettingsViewState extends State<_SettingsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: BlocConsumer<SettingsCubit, SettingsState>(
           listenWhen: (p, c) =>
@@ -195,7 +196,7 @@ class _SettingsViewState extends State<_SettingsView> {
                   ? context.read<SettingsCubit>().loadSmsBalance()
                   : Future.value(),
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
                 children: [
                   Text(
                     'Sozlamalar',
