@@ -19,6 +19,12 @@ class AppointmentFormState extends Equatable {
   final ClientHistoryLookupStatus historyStatus;
   final ClientHistory? clientHistory;
 
+  /// Existing clients whose phone number (or name) matches what's been
+  /// typed so far, offered as tap-to-fill suggestions before the barber
+  /// finishes typing the full number. Cleared once a suggestion is picked
+  /// or the field no longer has enough digits to search on.
+  final List<ClientStat> phoneSuggestions;
+
   final bool submitting;
   final bool cancelling;
   final bool saved;
@@ -37,6 +43,7 @@ class AppointmentFormState extends Equatable {
     this.sendSms = true,
     this.historyStatus = ClientHistoryLookupStatus.idle,
     this.clientHistory,
+    this.phoneSuggestions = const [],
     this.submitting = false,
     this.cancelling = false,
     this.saved = false,
@@ -64,6 +71,7 @@ class AppointmentFormState extends Equatable {
     ClientHistoryLookupStatus? historyStatus,
     ClientHistory? clientHistory,
     bool clearClientHistory = false,
+    List<ClientStat>? phoneSuggestions,
     bool? submitting,
     bool? cancelling,
     bool? saved,
@@ -83,6 +91,7 @@ class AppointmentFormState extends Equatable {
       sendSms: sendSms ?? this.sendSms,
       historyStatus: historyStatus ?? this.historyStatus,
       clientHistory: clearClientHistory ? null : (clientHistory ?? this.clientHistory),
+      phoneSuggestions: phoneSuggestions ?? this.phoneSuggestions,
       submitting: submitting ?? this.submitting,
       cancelling: cancelling ?? this.cancelling,
       saved: saved ?? this.saved,
@@ -104,6 +113,7 @@ class AppointmentFormState extends Equatable {
         sendSms,
         historyStatus,
         clientHistory,
+        phoneSuggestions,
         submitting,
         cancelling,
         saved,

@@ -178,6 +178,7 @@ Future<void> initDependencies() async {
       updateAppointmentUseCase: sl(),
       getClientHistoryUseCase: sl(),
       cancelAppointmentUseCase: sl(),
+      searchClientsUseCase: sl(),
     ),
   );
 

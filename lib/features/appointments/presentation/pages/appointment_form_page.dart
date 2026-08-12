@@ -19,9 +19,11 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/gradient_background.dart';
+import '../../../statistics/domain/entities/client_stat.dart';
 import '../../domain/entities/appointment.dart';
 import '../cubit/appointment_form_cubit.dart';
 import '../widgets/cancellation_warning_banner.dart';
+import '../widgets/phone_suggestion_list.dart';
 import '../widgets/service_type_chips.dart';
 
 class AppointmentFormPage extends StatelessWidget {
@@ -51,6 +53,16 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
   late final TextEditingController _phoneController;
   late final TextEditingController _nameController;
 
+  // The suggestion dropdown floats in a layer stacked on top of the form
+  // (via OverlayPortal, anchored to the phone field with a LayerLink) rather
+  // than being laid out inline in the field Column, so it appears above the
+  // field without pushing the rest of the form down or resizing the bottom
+  // sheet as results come and go.
+  final OverlayPortalController _suggestionOverlayController = OverlayPortalController();
+  final LayerLink _phoneFieldLink = LayerLink();
+  double _phoneFieldWidth = 0;
+  List<ClientStat> _overlaySuggestions = const [];
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +76,42 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
     _phoneController.dispose();
     _nameController.dispose();
     super.dispose();
+  }
+
+  void _updateSuggestionOverlay(List<ClientStat> suggestions) {
+    _overlaySuggestions = suggestions;
+    if (suggestions.isEmpty) {
+      _suggestionOverlayController.hide();
+    } else {
+      _suggestionOverlayController.show();
+    }
+  }
+
+  Widget _buildSuggestionOverlay(BuildContext context) {
+    // OverlayPortal (like Overlay/Stack) gives a non-Positioned child tight
+    // constraints matching the full overlay size, so the Follower itself
+    // ends up screen-sized; Align(bottomCenter) is what actually places our
+    // small content flush with the Follower's bottom-center anchor point
+    // (which CompositedTransformFollower pins just above the phone field).
+    return CompositedTransformFollower(
+      link: _phoneFieldLink,
+      targetAnchor: Alignment.topCenter,
+      followerAnchor: Alignment.bottomCenter,
+      offset: const Offset(0, -8),
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Material(
+          color: Colors.transparent,
+          child: SizedBox(
+            width: _phoneFieldWidth,
+            child: PhoneSuggestionList(
+              suggestions: _overlaySuggestions,
+              onSelected: (client) => _selectSuggestion(context, client),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _pickTime(BuildContext context) async {
@@ -177,14 +225,33 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
     }
   }
 
+  void _selectSuggestion(BuildContext context, ClientStat client) {
+    final formatted = UzPhoneInputFormatter.formatDisplay(client.phoneNumber);
+    _phoneController.value = TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+    if (client.lastName != null && client.lastName!.trim().isNotEmpty && _nameController.text.trim().isEmpty) {
+      _nameController.text = client.lastName!;
+    }
+    context.read<AppointmentFormCubit>().selectClientSuggestion(client);
+    _suggestionOverlayController.hide();
+    FocusScope.of(context).unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: GradientBackground(
         child: SafeArea(
           child: BlocConsumer<AppointmentFormCubit, AppointmentFormState>(
-            listenWhen: (p, c) => p.saved != c.saved || p.cancelled != c.cancelled || p.errorMessage != c.errorMessage,
+            listenWhen: (p, c) =>
+                p.saved != c.saved ||
+                p.cancelled != c.cancelled ||
+                p.errorMessage != c.errorMessage ||
+                p.phoneSuggestions != c.phoneSuggestions,
             listener: (context, state) {
+              _updateSuggestionOverlay(state.phoneSuggestions);
               if (state.saved || state.cancelled) {
                 Navigator.of(context).pop();
                 return;
@@ -222,13 +289,25 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                AppTextField(
-                                  controller: _phoneController,
-                                  label: 'Telefon raqami (ixtiyoriy)',
-                                  keyboardType: TextInputType.phone,
-                                  inputFormatters: [UzPhoneInputFormatter()],
-                                  prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.textSecondary),
-                                  onChanged: cubit.onPhoneChanged,
+                                OverlayPortal(
+                                  controller: _suggestionOverlayController,
+                                  overlayChildBuilder: _buildSuggestionOverlay,
+                                  child: LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      _phoneFieldWidth = constraints.maxWidth;
+                                      return CompositedTransformTarget(
+                                        link: _phoneFieldLink,
+                                        child: AppTextField(
+                                          controller: _phoneController,
+                                          label: 'Telefon raqami (ixtiyoriy)',
+                                          keyboardType: TextInputType.phone,
+                                          inputFormatters: [UzPhoneInputFormatter()],
+                                          prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.textSecondary),
+                                          onChanged: cubit.onPhoneChanged,
+                                        ),
+                                      );
+                                    },
+                                  ),
                                 ),
                                 if (state.phoneError != null)
                                   Padding(

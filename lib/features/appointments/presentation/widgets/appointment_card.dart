@@ -32,7 +32,7 @@ class AppointmentCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: GlassCard(
-        onTap: onTap,
+        onTap: isCancelled ? null : onTap,
         borderRadius: const BorderRadius.all(Radius.circular(16)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         tint: isCancelled ? AppColors.cancelledGlassTint : AppColors.scheduledGlassTint,

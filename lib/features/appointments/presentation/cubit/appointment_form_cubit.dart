@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/error/app_exception.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../statistics/domain/entities/client_stat.dart';
+import '../../../statistics/domain/usecases/search_clients_usecase.dart';
 import '../../domain/entities/appointment.dart';
 import '../../domain/entities/client_history.dart';
 import '../../domain/usecases/cancel_appointment_usecase.dart';
@@ -23,18 +25,22 @@ class AppointmentFormCubit extends Cubit<AppointmentFormState> {
   final UpdateAppointmentUseCase _updateAppointmentUseCase;
   final GetClientHistoryUseCase _getClientHistoryUseCase;
   final CancelAppointmentUseCase _cancelAppointmentUseCase;
+  final SearchClientsUseCase _searchClientsUseCase;
 
   Timer? _debounce;
+  Timer? _suggestionDebounce;
 
   AppointmentFormCubit({
     required CreateAppointmentUseCase createAppointmentUseCase,
     required UpdateAppointmentUseCase updateAppointmentUseCase,
     required GetClientHistoryUseCase getClientHistoryUseCase,
     required CancelAppointmentUseCase cancelAppointmentUseCase,
+    required SearchClientsUseCase searchClientsUseCase,
   })  : _createAppointmentUseCase = createAppointmentUseCase,
         _updateAppointmentUseCase = updateAppointmentUseCase,
         _getClientHistoryUseCase = getClientHistoryUseCase,
         _cancelAppointmentUseCase = cancelAppointmentUseCase,
+        _searchClientsUseCase = searchClientsUseCase,
         super(AppointmentFormState(day: DateTime.now()));
 
   /// Called once when the form opens. [defaultDay] is the day currently
@@ -71,9 +77,47 @@ class AppointmentFormCubit extends Cubit<AppointmentFormState> {
 
     _debounce?.cancel();
     final normalized = Validators.normalizePhone(value);
-    if (normalized == null) return;
+    if (normalized != null) {
+      _debounce = Timer(const Duration(milliseconds: 500), () => _lookupHistory(normalized));
+    }
 
-    _debounce = Timer(const Duration(milliseconds: 500), () => _lookupHistory(normalized));
+    _suggestionDebounce?.cancel();
+    final localDigits = value.replaceAll(RegExp(r'\D'), '').replaceFirst(RegExp(r'^998'), '');
+    if (localDigits.length < 2) {
+      emit(state.copyWith(phoneSuggestions: const []));
+      return;
+    }
+    _suggestionDebounce = Timer(const Duration(milliseconds: 300), () => _searchSuggestions(value));
+  }
+
+  Future<void> _searchSuggestions(String query) async {
+    try {
+      final barberId = FirebaseAuth.instance.currentUser?.uid;
+      final results = await _searchClientsUseCase(query, barberId: barberId);
+      if (isClosed || state.phoneNumber != query) return;
+      emit(state.copyWith(phoneSuggestions: results.take(5).toList()));
+    } on AppException {
+      // Suggestions are a convenience, not essential - a failed lookup just
+      // means none are shown, same as no matches found.
+      if (isClosed) return;
+      emit(state.copyWith(phoneSuggestions: const []));
+    }
+  }
+
+  /// Fills the phone (and, if not already typed, the name) from a tapped
+  /// suggestion and immediately looks up its cancellation history, skipping
+  /// the usual typing debounce since the number is already known-good.
+  void selectClientSuggestion(ClientStat client) {
+    _debounce?.cancel();
+    _suggestionDebounce?.cancel();
+    final prefillName = state.clientName.trim().isEmpty ? (client.lastName ?? '') : state.clientName;
+    emit(state.copyWith(
+      phoneNumber: client.phoneNumber,
+      clientName: prefillName,
+      clearPhoneError: true,
+      phoneSuggestions: const [],
+    ));
+    _lookupHistory(client.phoneNumber);
   }
 
   Future<void> _lookupHistory(String normalizedPhone) async {
@@ -206,6 +250,7 @@ class AppointmentFormCubit extends Cubit<AppointmentFormState> {
   @override
   Future<void> close() {
     _debounce?.cancel();
+    _suggestionDebounce?.cancel();
     return super.close();
   }
 }
