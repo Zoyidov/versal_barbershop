@@ -5,6 +5,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/widgets/app_confirm_dialog.dart';
 import '../../../../core/widgets/shimmer_placeholder.dart';
 import '../../../../core/widgets/week_calendar_strip.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
@@ -30,26 +31,15 @@ class _DashboardView extends StatelessWidget {
   const _DashboardView();
 
   Future<void> _confirmCancel(BuildContext context, Appointment appointment) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Text('Uchrashuvni bekor qilasizmi?', style: AppTextStyles.title),
-        content: Text(
+    final confirmed = await AppConfirmDialog.show(
+      context,
+      icon: Icons.event_busy_outlined,
+      title: 'Uchrashuvni bekor qilasizmi?',
+      message:
           '${appointment.clientName ?? appointment.clientPhone ?? "Mijoz"} uchun uchrashuv bekor qilingan deb belgilanadi.',
-          style: AppTextStyles.bodyMuted,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Orqaga')),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Bekor qilish', style: TextStyle(color: AppColors.danger)),
-          ),
-        ],
-      ),
+      confirmLabel: 'Bekor qilish',
     );
-    if (confirmed == true && context.mounted) {
+    if (confirmed && context.mounted) {
       context.read<DashboardCubit>().cancelAppointment(appointment.id!);
     }
   }

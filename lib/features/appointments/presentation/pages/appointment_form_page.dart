@@ -8,14 +8,18 @@ import 'package:flutter/cupertino.dart'
         CupertinoThemeData,
         CupertinoTextThemeData;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/phone_input_formatter.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_confirm_dialog.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/glass_card.dart';
 import '../../../../core/widgets/gradient_background.dart';
@@ -201,42 +205,128 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
   }
 
   Future<void> _confirmCancel(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        title: Text('Uchrashuvni bekor qilasizmi?', style: AppTextStyles.title),
-        content: Text(
-          'Uchrashuv bekor qilingan deb belgilanadi. U statistika uchun tarixda saqlanib qoladi.',
-          style: AppTextStyles.bodyMuted,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Orqaga')),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Bekor qilish', style: TextStyle(color: AppColors.danger)),
-          ),
-        ],
-      ),
+    final confirmed = await AppConfirmDialog.show(
+      context,
+      icon: Icons.event_busy_outlined,
+      title: 'Uchrashuvni bekor qilasizmi?',
+      message: 'Uchrashuv bekor qilingan deb belgilanadi. U statistika uchun tarixda saqlanib qoladi.',
+      confirmLabel: 'Bekor qilish',
     );
-    if (confirmed == true && context.mounted) {
+    if (confirmed && context.mounted) {
       context.read<AppointmentFormCubit>().cancelAppointment();
     }
   }
 
   void _selectSuggestion(BuildContext context, ClientStat client) {
-    final formatted = UzPhoneInputFormatter.formatDisplay(client.phoneNumber);
+    _applyPickedPhone(context, normalizedPhone: client.phoneNumber, name: client.lastName);
+  }
+
+  /// Fills phone + name (mirroring [_selectSuggestion]'s behavior) from a
+  /// number picked outside the smart-alert suggestions, e.g. via the
+  /// contacts picker - reuses [AppointmentFormCubit.selectClientSuggestion]
+  /// by wrapping the pick into a throwaway [ClientStat] so both paths share
+  /// the same fill + history-lookup logic.
+  void _applyPickedPhone(BuildContext context, {required String normalizedPhone, String? name}) {
+    final formatted = UzPhoneInputFormatter.formatDisplay(normalizedPhone);
     _phoneController.value = TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),
     );
-    if (client.lastName != null && client.lastName!.trim().isNotEmpty && _nameController.text.trim().isEmpty) {
-      _nameController.text = client.lastName!;
+    final trimmedName = name?.trim();
+    if (trimmedName != null && trimmedName.isNotEmpty && _nameController.text.trim().isEmpty) {
+      _nameController.text = trimmedName;
     }
-    context.read<AppointmentFormCubit>().selectClientSuggestion(client);
+    context.read<AppointmentFormCubit>().selectClientSuggestion(ClientStat(
+          phoneNumber: normalizedPhone,
+          lastName: trimmedName,
+          totalVisits: 0,
+          totalCancellations: 0,
+        ));
     _suggestionOverlayController.hide();
     FocusScope.of(context).unfocus();
+  }
+
+  Future<void> _pickFromContacts(BuildContext context) async {
+    Contact? contact;
+    try {
+      contact = await FlutterContacts.native.showPicker(
+        properties: const {ContactProperty.phone, ContactProperty.name},
+      );
+    } on PlatformException {
+      // Android throws when READ_CONTACTS isn't granted yet - ask once, then
+      // retry the same pick. iOS never needs this (its picker hands back
+      // only the tapped contact's fields regardless of app permission).
+      final status = await FlutterContacts.permissions.request(PermissionType.read);
+      if (!context.mounted) return;
+      if (status != PermissionStatus.granted && status != PermissionStatus.limited) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Kontaktlarni o\'qish uchun ruxsat berilmadi.')),
+        );
+        return;
+      }
+      try {
+        contact = await FlutterContacts.native.showPicker(
+          properties: const {ContactProperty.phone, ContactProperty.name},
+        );
+      } on PlatformException {
+        return;
+      }
+    }
+    if (contact == null || !context.mounted) return;
+
+    final phones = contact.phones;
+    if (phones.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bu kontaktda telefon raqami yo\'q.')),
+      );
+      return;
+    }
+
+    final chosen = phones.length == 1 ? phones.first : await _choosePhoneFromContact(context, phones);
+    if (chosen == null || !context.mounted) return;
+
+    final normalized = Validators.normalizePhone(chosen.number);
+    if (normalized == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bu raqam formati tanilmadi. Iltimos, qo\'lda kiriting.')),
+      );
+      return;
+    }
+
+    _applyPickedPhone(context, normalizedPhone: normalized, name: contact.displayName);
+  }
+
+  Future<Phone?> _choosePhoneFromContact(BuildContext context, List<Phone> phones) {
+    return showDialog<Phone>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text('Qaysi raqam?', style: AppTextStyles.title),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: phones.length,
+            itemBuilder: (context, index) {
+              final phone = phones[index];
+              return ListTile(
+                leading: const Icon(Icons.phone_outlined, color: AppColors.gold),
+                title: Text(phone.number, style: AppTextStyles.body),
+                subtitle: Text(
+                  phone.label.customLabel ?? phone.label.label.name,
+                  style: AppTextStyles.caption,
+                ),
+                onTap: () => Navigator.pop(context, phone),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Bekor qilish')),
+        ],
+      ),
+    );
   }
 
   @override
@@ -303,6 +393,11 @@ class _AppointmentFormViewState extends State<_AppointmentFormView> {
                                           keyboardType: TextInputType.phone,
                                           inputFormatters: [UzPhoneInputFormatter()],
                                           prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.textSecondary),
+                                          suffixIcon: IconButton(
+                                            tooltip: 'Kontaktlardan tanlash',
+                                            icon: const Icon(Icons.contacts_outlined, color: AppColors.textSecondary),
+                                            onPressed: () => _pickFromContacts(context),
+                                          ),
                                           onChanged: cubit.onPhoneChanged,
                                         ),
                                       );

@@ -26,6 +26,11 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- The contact picker button on the appointment form (CNContactPickerViewController)
+	     is exempt from needing this permission granted, but the app still links
+	     Contacts.framework, which App Store review requires a usage string for. -->
+	<key>NSContactsUsageDescription</key>
+	<string>Uchrashuv uchun mijoz raqamini telefon kontaktlaringizdan tanlash uchun ishlatiladi.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

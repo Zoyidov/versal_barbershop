@@ -5,6 +5,9 @@
          (FirebaseMessaging.requestPermission(), called from
          PushNotificationService.initialize()) can ask the user for it. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Lets the barber pick a client's number from their phone contacts
+         when creating an appointment (native contact picker). -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <application
         android:label="VersalBarber Shop"
         android:name="${applicationName}"
